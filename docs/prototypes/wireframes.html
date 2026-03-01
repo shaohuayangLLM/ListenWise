@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListenWise — 原型草图</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface-2: #f0f1f5;
+    --surface-3: #e8e9f0;
+    --border: #e0e2eb;
+    --border-hover: #c8cbda;
+    --text: #1a1d2e;
+    --text-dim: #6b7094;
+    --text-muted: #9a9db8;
+    --accent: #6c5ce7;
+    --accent-glow: rgba(108, 92, 231, 0.12);
+    --accent-2: #00a8a3;
+    --accent-3: #e84393;
+    --success: #00b894;
+    --warning: #e17d10;
+    --tag-work: #6c5ce7;
+    --tag-study: #00a8a3;
+    --tag-life: #e84393;
+    --tag-call: #e17d10;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============ Prototype Navigation ============ */
+  .proto-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    height: 56px;
+    gap: 8px;
+  }
+
+  .proto-nav .logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-right: 24px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+
+  .proto-nav .logo span {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .proto-tab {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .proto-tab:hover { color: var(--text); background: var(--surface-2); }
+  .proto-tab.active {
+    color: var(--accent);
+    background: var(--accent-glow);
+    border-color: rgba(108, 92, 231, 0.3);
+  }
+
+  /* ============ Page Container ============ */
+  .page { display: none; padding-top: 56px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ============ PAGE 1: Dashboard ============ */
+  .dashboard { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 36px;
+  }
+
+  .dash-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .dash-header h1 small {
+    display: block;
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-top: 4px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px var(--accent-glow); }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border-hover); }
+
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stat-card .sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title a {
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+
+  /* Processing tasks */
+  .task-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .task-item:hover { border-color: var(--border-hover); }
+
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .task-icon.processing { background: rgba(108, 92, 231, 0.1); }
+  .task-icon.done { background: rgba(0, 184, 148, 0.1); }
+
+  .task-info { flex: 1; min-width: 0; }
+  .task-info .name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .task-info .meta { font-size: 12px; color: var(--text-dim); }
+
+  .progress-bar {
+    width: 120px;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .task-status {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .task-status.processing { color: var(--accent); }
+  .task-status.done { color: var(--success); }
+
+  /* Recent recordings list */
+  .recording-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .recording-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .recording-item:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+  }
+
+  .rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .rec-info { flex: 1; min-width: 0; }
+  .rec-info .name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec-info .meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  .scene-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .scene-tag.work { background: rgba(108, 92, 231, 0.1); color: #5a4bd1; }
+  .scene-tag.study { background: rgba(0, 168, 163, 0.1); color: #008f8a; }
+  .scene-tag.life { background: rgba(232, 67, 147, 0.1); color: #d63384; }
+  .scene-tag.call { background: rgba(225, 125, 16, 0.1); color: #c96a0a; }
+
+  /* Quick actions sidebar */
+  .quick-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .quick-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .quick-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .quick-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  .quick-btn:hover { border-color: var(--accent); background: var(--surface-3); }
+  .quick-btn .icon { font-size: 22px; }
+  .quick-btn .label { font-size: 12px; color: var(--text-dim); }
+
+  .recent-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-chip:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ============ PAGE 2: Upload ============ */
+  .upload-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  .upload-page h1 {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .upload-page .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--surface);
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--accent);
+    background: rgba(108, 92, 231, 0.05);
+  }
+
+  .upload-zone .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+
+  .upload-zone .text {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .upload-zone .hint {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .or-divider {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  .or-divider::before, .or-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 24px);
+    height: 1px;
+    background: var(--border);
+  }
+
+  .or-divider::before { left: 0; }
+  .or-divider::after { right: 0; }
+
+  .web-record-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-bottom: 32px;
+  }
+
+  .web-record-btn:hover { border-color: var(--accent-3); background: rgba(253, 121, 168, 0.05); }
+
+  .form-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .form-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .scene-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .scene-option {
+    padding: 14px;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  .scene-option:hover { border-color: var(--border-hover); }
+  .scene-option.selected { border-color: var(--accent); background: var(--accent-glow); }
+
+  .scene-option .icon { font-size: 24px; margin-bottom: 6px; }
+  .scene-option .name { font-size: 13px; font-weight: 500; }
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .form-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-muted); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+    font-family: inherit;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    transition: all 0.2s;
+  }
+
+  .submit-btn:hover { transform: translateY(-1px); }
+
+  /* ============ PAGE 3: Detail ============ */
+  .detail-page { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 16px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .detail-header h1 { font-size: 20px; font-weight: 600; flex: 1; }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-outline {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--text); }
+
+  /* Audio Player */
+  .audio-player {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .waveform {
+    height: 56px;
+    background: var(--surface-2);
+    border-radius: var(--radius-xs);
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .waveform-bars {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    gap: 2px;
+  }
+
+  .waveform-bar {
+    flex: 1;
+    background: var(--text-muted);
+    border-radius: 1px;
+    min-width: 2px;
+    transition: background 0.2s;
+  }
+
+  .waveform-bar.played { background: var(--accent); }
+
+  .waveform-cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent-3);
+    left: 35%;
+    box-shadow: 0 0 8px var(--accent-3);
+  }
+
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .play-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .time-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .speed-btn {
+    padding: 4px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .player-spacer { flex: 1; }
+
+  .speaker-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .speaker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  /* Transcript + Document split */
+  .detail-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-header h2 { font-size: 14px; font-weight: 600; }
+
+  .panel-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .panel-tab {
+    padding: 5px 12px;
+    font-size: 12px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .panel-tab.active { background: var(--accent-glow); color: var(--accent); border-color: rgba(108, 92, 231, 0.2); }
+
+  .panel-body {
+    padding: 20px;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+
+  .transcript-line {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(42, 45, 62, 0.5);
+    font-size: 14px;
+    line-height: 1.7;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: var(--radius-xs);
+  }
+
+  .transcript-line:hover { background: var(--surface-2); }
+
+  .transcript-line.active { background: rgba(108, 92, 231, 0.06); }
+
+  .transcript-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    padding-top: 3px;
+    min-width: 48px;
+  }
+
+  .transcript-speaker {
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 48px;
+    padding-top: 2px;
+  }
+
+  .transcript-text { flex: 1; color: var(--text); }
+
+  /* Document output */
+  .doc-content h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 20px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .doc-content h3:first-child { margin-top: 0; }
+
+  .doc-content ul {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+
+  .doc-content li {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .doc-content .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+  }
+
+  .todo-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .doc-content .highlight {
+    background: rgba(225, 125, 16, 0.06);
+    border-left: 3px solid var(--warning);
+    padding: 10px 14px;
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ============ PAGE 4: Library ============ */
+  .library-page { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+  .library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .library-header h1 { font-size: 22px; font-weight: 700; }
+
+  .view-switcher {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+  }
+
+  .view-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .view-btn.active { background: var(--accent-glow); color: var(--accent); }
+
+  .library-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    max-width: 400px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text-muted); }
+
+  .search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+  }
+
+  .filter-chip {
+    padding: 7px 14px;
+    font-size: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+  .filter-chip:hover { border-color: var(--border-hover); }
+
+  /* Timeline view */
+  .timeline { position: relative; }
+
+  .timeline-group { margin-bottom: 32px; }
+
+  .timeline-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .timeline-date::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: translateY(-50%);
+  }
+
+  .timeline-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
+    margin-left: 7px;
+  }
+
+  .timeline-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .timeline-item:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+  .timeline-item .info { flex: 1; }
+  .timeline-item .name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .timeline-item .meta { font-size: 12px; color: var(--text-dim); }
+  .timeline-item .duration { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+
+  /* Folder sidebar */
+  .library-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+  }
+
+  .folder-sidebar {
+    display: none;
+  }
+
+  .library-layout .folder-sidebar { display: block; }
+
+  .folder-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .folder-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+
+  .folder-item:hover { background: var(--surface-2); color: var(--text); }
+  .folder-item.active { background: var(--accent-glow); color: var(--accent); }
+  .folder-item .count { margin-left: auto; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ============ PAGE 5: Settings ============ */
+  .settings-page { max-width: 680px; margin: 0 auto; padding: 48px 32px; }
+  .settings-page h1 { font-size: 22px; font-weight: 700; margin-bottom: 32px; }
+
+  .settings-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .settings-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+  }
+
+  .setting-row:not(:last-child) { border-bottom: 1px solid rgba(42, 45, 62, 0.4); }
+
+  .setting-label { font-size: 14px; }
+  .setting-label small { display: block; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .toggle {
+    width: 44px;
+    height: 24px;
+    background: var(--surface-3);
+    border: none;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .toggle.on { background: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.25s;
+  }
+
+  .toggle.on::after { transform: translateX(20px); }
+
+  .select-input {
+    padding: 8px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    min-width: 140px;
+    appearance: none;
+  }
+
+  .template-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .template-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+
+  .template-item:hover { border-color: var(--border-hover); }
+
+  .template-item .icon { font-size: 18px; }
+  .template-item .name { flex: 1; font-weight: 500; }
+
+  .template-item .edit-link {
+    font-size: 12px;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-add {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Page label */
+  .page-label {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cccfd9; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b0b4c4; }
+</style>
+</head>
+<body>
+
+<!-- Prototype Navigation -->
+<nav class="proto-nav">
+  <div class="logo">ListenWise <span>原型草图 v0.1</span></div>
+  <button class="proto-tab active" onclick="showPage('dashboard')">仪表盘</button>
+  <button class="proto-tab" onclick="showPage('upload')">上传录音</button>
+  <button class="proto-tab" onclick="showPage('library')">录音库</button>
+  <button class="proto-tab" onclick="showPage('settings')">设置</button>
+</nav>
+
+<!-- ==================== PAGE 1: Dashboard ==================== -->
+<div id="page-dashboard" class="page active">
+  <div class="dashboard">
+    <div class="dash-header">
+      <h1>欢迎回来 👋<small>今天是 2026年2月28日，你有 2 条录音正在处理中</small></h1>
+      <button class="btn-primary" onclick="showPage('upload')">⬆ 上传录音</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">总录音数</div>
+        <div class="value">128</div>
+        <div class="sub">本月新增 12 条</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">总时长</div>
+        <div class="value" style="color: var(--accent);">86h</div>
+        <div class="sub">约 52 万字转录</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">待处理</div>
+        <div class="value" style="color: var(--warning);">2</div>
+        <div class="sub">预计 5 分钟完成</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">本周新增</div>
+        <div class="value" style="color: var(--success);">5</div>
+        <div class="sub">较上周 +2</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div>
+        <div class="section-title">处理中 <span class="task-status processing">● 进行中</span></div>
+        <div class="task-list">
+          <div class="task-item">
+            <div class="task-icon processing">🎙</div>
+            <div class="task-info">
+              <div class="name">Q1 产品需求评审会议.m4a</div>
+              <div class="meta">58 分钟 · 上传于 10:32</div>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 65%;"></div></div>
+            <div class="task-status processing">转录中 65%</div>
+          </div>
+          <div class="task-item">
+            <div class="task-icon processing">📞</div>
+            <div class="task-info">
+              <div class="name">客户沟通电话-王经理.mp3</div>
+              <div class="meta">23 分钟 · 上传于 11:05</div>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 30%;"></div></div>
+            <div class="task-status processing">排队中</div>
+          </div>
+        </div>
+
+        <div class="section-title">最近录音 <a href="#" onclick="showPage('library')">查看全部 →</a></div>
+        <div class="recording-list">
+          <div class="recording-item" onclick="showPage('detail')">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="rec-info">
+              <div class="name">周五技术方案汇报</div>
+              <div class="meta">昨天 14:30 · 1小时12分 · 3 位发言人</div>
+            </div>
+            <span class="scene-tag work">汇报会议</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-study);"></div>
+            <div class="rec-info">
+              <div class="name">机器学习第8讲 - 神经网络基础</div>
+              <div class="meta">2月26日 · 45分钟 · 1 位发言人</div>
+            </div>
+            <span class="scene-tag study">学习录音</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-life);"></div>
+            <div class="rec-info">
+              <div class="name">二年级期末家长会</div>
+              <div class="meta">2月25日 · 38分钟 · 2 位发言人</div>
+            </div>
+            <span class="scene-tag life">家长会</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="rec-info">
+              <div class="name">2月全体员工大会 - 总经理讲话</div>
+              <div class="meta">2月24日 · 1小时30分 · 1 位发言人</div>
+            </div>
+            <span class="scene-tag work">领导大会</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-call);"></div>
+            <div class="rec-info">
+              <div class="name">供应商报价确认电话</div>
+              <div class="meta">2月23日 · 15分钟 · 2 位发言人</div>
+            </div>
+            <span class="scene-tag call">电话录音</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-panel">
+        <div class="quick-card">
+          <h3>快捷操作</h3>
+          <div class="quick-action-grid">
+            <button class="quick-btn" onclick="showPage('upload')">
+              <span class="icon">📁</span>
+              <span class="label">上传文件</span>
+            </button>
+            <button class="quick-btn">
+              <span class="icon">🎙</span>
+              <span class="label">开始录音</span>
+            </button>
+            <button class="quick-btn" onclick="showPage('library')">
+              <span class="icon">🔍</span>
+              <span class="label">搜索内容</span>
+            </button>
+            <button class="quick-btn">
+              <span class="icon">📋</span>
+              <span class="label">待办事项</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="quick-card">
+          <h3>常用标签</h3>
+          <div class="recent-tags">
+            <span class="tag-chip"># 紧急</span>
+            <span class="tag-chip"># 已处理</span>
+            <span class="tag-chip"># Q1评审</span>
+            <span class="tag-chip"># 数学课</span>
+            <span class="tag-chip"># 客户沟通</span>
+            <span class="tag-chip"># 待确认</span>
+            <span class="tag-chip"># 周报素材</span>
+          </div>
+        </div>
+
+        <div class="quick-card">
+          <h3>存储用量</h3>
+          <div style="margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+              <span style="color: var(--text-dim);">已使用</span>
+              <span style="font-family: 'JetBrains Mono', monospace;">2.4 GB / 10 GB</span>
+            </div>
+            <div class="progress-bar" style="width: 100%; height: 6px;">
+              <div class="fill" style="width: 24%; background: var(--accent-2);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-label">PAGE 1 · 首页仪表盘</div>
+</div>
+
+<!-- ==================== PAGE 2: Upload ==================== -->
+<div id="page-upload" class="page">
+  <div class="upload-page">
+    <h1>上传录音</h1>
+    <p class="subtitle">支持 mp3、m4a、wav、mp4、webm 格式，单文件最长 2 小时</p>
+
+    <div class="upload-zone">
+      <div class="icon">📂</div>
+      <div class="text">拖拽文件到此处，或点击选择文件</div>
+      <div class="hint">支持批量上传，每次最多 5 个文件</div>
+    </div>
+
+    <div class="or-divider">或</div>
+
+    <button class="web-record-btn">
+      <span style="color: var(--accent-3);">⏺</span>
+      开始浏览器录音
+    </button>
+
+    <div class="form-section">
+      <h3>选择场景类型</h3>
+      <div class="scene-selector">
+        <button class="scene-option selected">
+          <div class="icon">💼</div>
+          <div class="name">需求评审</div>
+        </button>
+        <button class="scene-option">
+          <div class="icon">📊</div>
+          <div class="name">汇报会议</div>
+        </button>
+        <button class="scene-option">
+          <div class="icon">🏛</div>
+          <div class="name">领导大会</div>
+        </button>
+        <button class="scene-option">
+          <div class="icon">🏫</div>
+          <div class="name">家长会</div>
+        </button>
+        <button class="scene-option">
+          <div class="icon">📞</div>
+          <div class="name">电话录音</div>
+        </button>
+        <button class="scene-option">
+          <div class="icon">📚</div>
+          <div class="name">学习录音</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>补充信息（可选）</h3>
+      <div class="form-row">
+        <input class="form-input" placeholder="录音标题，如：Q1产品评审会" />
+      </div>
+      <div class="form-row">
+        <input class="form-input" placeholder="添加标签，用逗号分隔" />
+        <select class="select-input">
+          <option>选择文件夹</option>
+          <option>工作 / Q1评审</option>
+          <option>学习 / 数学课</option>
+          <option>+ 新建文件夹</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <input class="form-input" placeholder="备注说明（可选）" style="width: 100%;" />
+      </div>
+    </div>
+
+    <button class="submit-btn">开始转录处理 →</button>
+  </div>
+  <div class="page-label">PAGE 2 · 上传录音</div>
+</div>
+
+<!-- ==================== PAGE 3: Detail ==================== -->
+<div id="page-detail" class="page">
+  <div class="detail-page">
+    <div class="detail-header">
+      <button class="back-btn" onclick="showPage('dashboard')">←</button>
+      <h1>周五技术方案汇报</h1>
+      <span class="scene-tag work" style="font-size: 12px;">汇报会议</span>
+      <div style="flex: 1;"></div>
+      <div class="detail-actions">
+        <button class="btn-outline">✏️ 编辑</button>
+        <button class="btn-outline">📥 导出</button>
+        <button class="btn-outline">🔗 分享</button>
+      </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="audio-player">
+      <div class="waveform">
+        <div class="waveform-bars" id="waveform-bars"></div>
+        <div class="waveform-cursor"></div>
+      </div>
+      <div class="player-controls">
+        <button class="play-btn">▶</button>
+        <span class="time-display">25:18 / 1:12:34</span>
+        <button class="speed-btn">1.0x</button>
+        <div class="player-spacer"></div>
+        <div class="speaker-legend">
+          <span><span class="speaker-dot" style="background: var(--accent);"></span> 发言人 A（张工）</span>
+          <span><span class="speaker-dot" style="background: var(--accent-2);"></span> 发言人 B（李总）</span>
+          <span><span class="speaker-dot" style="background: var(--accent-3);"></span> 发言人 C</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split View -->
+    <div class="detail-split">
+      <!-- Left: Transcript -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>转录文本</h2>
+          <div style="font-size: 12px; color: var(--text-muted);">共 12,486 字</div>
+        </div>
+        <div class="panel-body">
+          <div class="transcript-line">
+            <span class="transcript-time">00:00</span>
+            <span class="transcript-speaker" style="color: var(--accent);">张工</span>
+            <span class="transcript-text">好，那我们开始今天的技术方案汇报。首先我来介绍一下整体的架构设计思路。</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">00:15</span>
+            <span class="transcript-speaker" style="color: var(--accent);">张工</span>
+            <span class="transcript-text">我们这次采用的是微服务架构，主要分为四个核心模块：用户服务、订单服务、支付服务和通知服务。</span>
+          </div>
+          <div class="transcript-line active">
+            <span class="transcript-time">00:38</span>
+            <span class="transcript-speaker" style="color: var(--accent-2);">李总</span>
+            <span class="transcript-text">微服务的拆分粒度是怎么定的？有没有考虑过服务之间的通信开销？</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">00:52</span>
+            <span class="transcript-speaker" style="color: var(--accent);">张工</span>
+            <span class="transcript-text">这个问题很好。我们做了详细的领域分析，按照 DDD 的思路来划分边界上下文。通信方面，同步调用走 gRPC，异步消息走 Kafka。</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">01:20</span>
+            <span class="transcript-speaker" style="color: var(--accent-2);">李总</span>
+            <span class="transcript-text">Kafka 的运维成本不低，团队有这方面的经验吗？</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">01:35</span>
+            <span class="transcript-speaker" style="color: var(--accent-3);">发言人C</span>
+            <span class="transcript-text">我们之前在数据平台项目中用过 Kafka，有一定的运维经验。而且我们计划用托管版本来降低运维压力。</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">02:05</span>
+            <span class="transcript-speaker" style="color: var(--accent-2);">李总</span>
+            <span class="transcript-text">好的，那数据库方面呢？每个微服务独立数据库？</span>
+          </div>
+          <div class="transcript-line">
+            <span class="transcript-time">02:18</span>
+            <span class="transcript-speaker" style="color: var(--accent);">张工</span>
+            <span class="transcript-text">是的，每个服务有自己的数据库实例，保证数据自治。跨服务的数据一致性通过 Saga 模式来处理。</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Document -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>场景化文档</h2>
+          <div class="panel-tabs">
+            <button class="panel-tab active">汇报纪要</button>
+            <button class="panel-tab">原始摘要</button>
+            <button class="panel-tab">思维导图</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="doc-content">
+            <h3>📋 汇报摘要</h3>
+            <p style="font-size: 14px; line-height: 1.8; color: var(--text-dim); margin-bottom: 16px;">
+              本次技术方案汇报由张工主讲，介绍了新系统的微服务架构设计方案。李总及团队成员对关键技术选型进行了深入讨论。
+            </p>
+
+            <h3>🔑 关键决策</h3>
+            <ul>
+              <li>采用微服务架构，按 DDD 划分 4 个核心服务</li>
+              <li>同步通信使用 gRPC，异步消息使用 Kafka（托管版）</li>
+              <li>每个微服务独立数据库，跨服务一致性采用 Saga 模式</li>
+              <li>API 网关统一使用 Kong</li>
+            </ul>
+
+            <h3>❓ 问答记录</h3>
+            <div class="highlight">
+              <strong>李总：</strong>微服务拆分粒度如何确定？<br>
+              <strong>张工：</strong>按照 DDD 领域边界划分，避免过度拆分。
+            </div>
+            <div class="highlight">
+              <strong>李总：</strong>Kafka 运维成本和团队经验？<br>
+              <strong>发言人C：</strong>团队有数据平台项目经验，计划使用托管版本。
+            </div>
+
+            <h3>📌 后续行动</h3>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span style="font-size: 14px;">张工：下周一前完成 API 网关的 POC 验证</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span style="font-size: 14px;">发言人C：调研 Kafka 托管方案并输出对比报告</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span style="font-size: 14px;">李总：协调 DBA 评估数据库拆分方案的可行性</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span style="font-size: 14px;">全组：下周三进行第二轮方案评审</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-label">PAGE 3 · 录音详情</div>
+</div>
+
+<!-- ==================== PAGE 4: Library ==================== -->
+<div id="page-library" class="page">
+  <div class="library-page">
+    <div class="library-header">
+      <h1>录音库</h1>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="view-switcher">
+          <button class="view-btn active" onclick="toggleView('timeline')">📅 时间线</button>
+          <button class="view-btn" onclick="toggleView('folder')">📁 文件夹</button>
+        </div>
+        <button class="btn-primary" style="padding: 10px 18px; font-size: 13px;" onclick="showPage('upload')">⬆ 上传</button>
+      </div>
+    </div>
+
+    <div class="library-toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input placeholder="搜索录音名称、转录内容、标签..." />
+      </div>
+      <div class="filter-chips">
+        <button class="filter-chip active">全部</button>
+        <button class="filter-chip">💼 工作会议</button>
+        <button class="filter-chip">📚 学习笔记</button>
+        <button class="filter-chip">🏠 生活记录</button>
+        <button class="filter-chip">📞 电话通话</button>
+      </div>
+    </div>
+
+    <!-- Timeline View -->
+    <div id="view-timeline" class="timeline">
+      <div class="timeline-group">
+        <div class="timeline-date">今天 · 2月28日</div>
+        <div class="timeline-items">
+          <div class="timeline-item" onclick="showPage('detail')">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="info">
+              <div class="name">Q1 产品需求评审会议</div>
+              <div class="meta">10:32 上传 · 需求评审 · #Q1评审 #产品</div>
+            </div>
+            <span class="scene-tag work">需求评审</span>
+            <span class="duration">58:00</span>
+            <span class="task-status processing" style="font-size: 11px;">处理中</span>
+          </div>
+          <div class="timeline-item">
+            <div class="rec-dot" style="background: var(--tag-call);"></div>
+            <div class="info">
+              <div class="name">客户沟通电话-王经理</div>
+              <div class="meta">11:05 上传 · 电话录音 · #客户沟通</div>
+            </div>
+            <span class="scene-tag call">电话录音</span>
+            <span class="duration">23:15</span>
+            <span class="task-status processing" style="font-size: 11px;">排队中</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-group">
+        <div class="timeline-date">昨天 · 2月27日</div>
+        <div class="timeline-items">
+          <div class="timeline-item" onclick="showPage('detail')">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="info">
+              <div class="name">周五技术方案汇报</div>
+              <div class="meta">14:30 · 汇报会议 · 3 位发言人 · #技术方案</div>
+            </div>
+            <span class="scene-tag work">汇报会议</span>
+            <span class="duration">1:12:34</span>
+            <span class="task-status done" style="font-size: 11px;">✓ 已完成</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-group">
+        <div class="timeline-date">2月26日 · 周三</div>
+        <div class="timeline-items">
+          <div class="timeline-item">
+            <div class="rec-dot" style="background: var(--tag-study);"></div>
+            <div class="info">
+              <div class="name">机器学习第8讲 - 神经网络基础</div>
+              <div class="meta">19:00 · 学习录音 · 1 位发言人 · #ML课程</div>
+            </div>
+            <span class="scene-tag study">学习录音</span>
+            <span class="duration">45:20</span>
+            <span class="task-status done" style="font-size: 11px;">✓ 已完成</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-group">
+        <div class="timeline-date">2月25日 · 周二</div>
+        <div class="timeline-items">
+          <div class="timeline-item">
+            <div class="rec-dot" style="background: var(--tag-life);"></div>
+            <div class="info">
+              <div class="name">二年级期末家长会</div>
+              <div class="meta">15:00 · 家长会 · 2 位发言人 · #学校</div>
+            </div>
+            <span class="scene-tag life">家长会</span>
+            <span class="duration">38:10</span>
+            <span class="task-status done" style="font-size: 11px;">✓ 已完成</span>
+          </div>
+          <div class="timeline-item">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="info">
+              <div class="name">2月全体员工大会 - 总经理讲话</div>
+              <div class="meta">10:00 · 领导大会 · 1 位发言人 · #公司大会</div>
+            </div>
+            <span class="scene-tag work">领导大会</span>
+            <span class="duration">1:30:00</span>
+            <span class="task-status done" style="font-size: 11px;">✓ 已完成</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Folder View (hidden by default) -->
+    <div id="view-folder" class="library-layout" style="display: none;">
+      <div class="folder-sidebar">
+        <div class="section-title" style="font-size: 13px;">文件夹</div>
+        <div class="folder-list">
+          <div class="folder-item active">
+            <span>📁</span> 全部文件
+            <span class="count">128</span>
+          </div>
+          <div class="folder-item">
+            <span>💼</span> 工作
+            <span class="count">64</span>
+          </div>
+          <div class="folder-item" style="padding-left: 36px;">
+            <span>📋</span> Q1 评审
+            <span class="count">8</span>
+          </div>
+          <div class="folder-item" style="padding-left: 36px;">
+            <span>📊</span> 周报汇报
+            <span class="count">12</span>
+          </div>
+          <div class="folder-item" style="padding-left: 36px;">
+            <span>🏛</span> 公司大会
+            <span class="count">4</span>
+          </div>
+          <div class="folder-item">
+            <span>📚</span> 学习
+            <span class="count">32</span>
+          </div>
+          <div class="folder-item" style="padding-left: 36px;">
+            <span>🤖</span> ML课程
+            <span class="count">8</span>
+          </div>
+          <div class="folder-item">
+            <span>🏠</span> 生活
+            <span class="count">18</span>
+          </div>
+          <div class="folder-item">
+            <span>📞</span> 电话通话
+            <span class="count">14</span>
+          </div>
+          <div class="folder-item" style="color: var(--accent); margin-top: 8px;">
+            <span>➕</span> 新建文件夹
+          </div>
+        </div>
+
+        <div class="section-title" style="font-size: 13px; margin-top: 24px;">标签</div>
+        <div class="recent-tags">
+          <span class="tag-chip"># 紧急</span>
+          <span class="tag-chip"># 已处理</span>
+          <span class="tag-chip"># Q1评审</span>
+          <span class="tag-chip"># 数学课</span>
+          <span class="tag-chip"># 客户沟通</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="recording-list">
+          <div class="recording-item" onclick="showPage('detail')">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="rec-info">
+              <div class="name">Q1 产品需求评审会议</div>
+              <div class="meta">今天 10:32 · 58分钟 · 处理中</div>
+            </div>
+            <span class="scene-tag work">需求评审</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="rec-info">
+              <div class="name">周五技术方案汇报</div>
+              <div class="meta">昨天 14:30 · 1小时12分 · 已完成</div>
+            </div>
+            <span class="scene-tag work">汇报会议</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-study);"></div>
+            <div class="rec-info">
+              <div class="name">机器学习第8讲 - 神经网络基础</div>
+              <div class="meta">2月26日 · 45分钟 · 已完成</div>
+            </div>
+            <span class="scene-tag study">学习录音</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-life);"></div>
+            <div class="rec-info">
+              <div class="name">二年级期末家长会</div>
+              <div class="meta">2月25日 · 38分钟 · 已完成</div>
+            </div>
+            <span class="scene-tag life">家长会</span>
+          </div>
+          <div class="recording-item">
+            <div class="rec-dot" style="background: var(--tag-work);"></div>
+            <div class="rec-info">
+              <div class="name">2月全体员工大会</div>
+              <div class="meta">2月24日 · 1小时30分 · 已完成</div>
+            </div>
+            <span class="scene-tag work">领导大会</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-label">PAGE 4 · 录音库</div>
+</div>
+
+<!-- ==================== PAGE 5: Settings ==================== -->
+<div id="page-settings" class="page">
+  <div class="settings-page">
+    <h1>设置</h1>
+
+    <div class="settings-section">
+      <h3>转录设置</h3>
+      <div class="setting-row">
+        <div class="setting-label">
+          说话人分离
+          <small>自动识别和标注不同发言人</small>
+        </div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          自动标点恢复
+          <small>智能添加标点符号和段落分隔</small>
+        </div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          时间戳粒度
+          <small>转录文本中时间标记的精度</small>
+        </div>
+        <select class="select-input">
+          <option>逐句（推荐）</option>
+          <option>每 30 秒</option>
+          <option>每分钟</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          默认语言
+          <small>录音的主要语言</small>
+        </div>
+        <select class="select-input">
+          <option>中文（普通话）</option>
+          <option>英文</option>
+          <option>自动检测</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>场景模板管理</h3>
+      <div class="template-list">
+        <div class="template-item">
+          <span class="icon">💼</span>
+          <span class="name">需求评审会</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+        <div class="template-item">
+          <span class="icon">📊</span>
+          <span class="name">汇报会议</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+        <div class="template-item">
+          <span class="icon">🏛</span>
+          <span class="name">领导大会</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+        <div class="template-item">
+          <span class="icon">🏫</span>
+          <span class="name">家长会</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+        <div class="template-item">
+          <span class="icon">📞</span>
+          <span class="name">电话录音</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+        <div class="template-item">
+          <span class="icon">📚</span>
+          <span class="name">学习录音</span>
+          <span class="edit-link">编辑模板</span>
+        </div>
+      </div>
+      <button class="btn-add">+ 添加自定义场景模板</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>导出设置</h3>
+      <div class="setting-row">
+        <div class="setting-label">
+          默认导出格式
+          <small>生成文档的默认文件格式</small>
+        </div>
+        <select class="select-input">
+          <option>Markdown (.md)</option>
+          <option>Word (.docx)</option>
+          <option>PDF (.pdf)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          导出包含原始转录
+          <small>导出时是否同时包含完整转录文本</small>
+        </div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          导出包含时间戳
+          <small>在导出文档中保留时间标记</small>
+        </div>
+        <button class="toggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>通知设置</h3>
+      <div class="setting-row">
+        <div class="setting-label">
+          转录完成通知
+          <small>录音处理完成后发送浏览器通知</small>
+        </div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          邮件通知
+          <small>同时发送邮件提醒</small>
+        </div>
+        <button class="toggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+  </div>
+  <div class="page-label">PAGE 5 · 设置</div>
+</div>
+
+<script>
+  // Page navigation
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.proto-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    const tabs = document.querySelectorAll('.proto-tab');
+    const map = { dashboard: 0, upload: 1, library: 2, settings: 3, detail: -1 };
+    tabs[map[name]].classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // Scene selector
+  document.querySelectorAll('.scene-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.scene-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // Library view toggle
+  function toggleView(view) {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    if (view === 'timeline') {
+      document.getElementById('view-timeline').style.display = 'block';
+      document.getElementById('view-folder').style.display = 'none';
+      document.querySelectorAll('.view-btn')[0].classList.add('active');
+    } else {
+      document.getElementById('view-timeline').style.display = 'none';
+      document.getElementById('view-folder').style.display = 'grid';
+      document.querySelectorAll('.view-btn')[1].classList.add('active');
+    }
+  }
+
+  // Generate waveform bars
+  const waveformBars = document.getElementById('waveform-bars');
+  for (let i = 0; i < 200; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'waveform-bar' + (i < 70 ? ' played' : '');
+    const h = Math.random() * 0.7 + 0.15;
+    bar.style.height = (h * 100) + '%';
+    waveformBars.appendChild(bar);
+  }
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

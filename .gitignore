@@ -1,0 +1,29 @@
+# Environment files with secrets
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+
+# Uploads (user data)
+uploads/
+
+# Redis dump
+dump.rdb
+
+# IDE
+.vscode/
+.idea/
