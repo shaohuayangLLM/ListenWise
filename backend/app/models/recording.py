@@ -22,6 +22,7 @@ class Recording(Base, TimestampMixin):
     file_size: Mapped[int] = mapped_column(BigInteger, default=0)  # bytes
     status: Mapped[RecordingStatus] = mapped_column(default=RecordingStatus.uploading)
     source: Mapped[RecordingSource] = mapped_column(default=RecordingSource.upload)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # 播客原始链接
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     speaker_count: Mapped[int] = mapped_column(default=0)
 

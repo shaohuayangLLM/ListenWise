@@ -22,7 +22,10 @@ class Transcript(Base, TimestampMixin):
     # speaker display-name overrides, e.g. {"A": "张三"}
     speaker_labels: Mapped[dict] = mapped_column(JSONB, default=dict)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
-    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)  # tldr 纯文本
+    outline: Mapped[list] = mapped_column(JSONB, default=list)        # [{title,start_sec,points}]
+    highlights: Mapped[list] = mapped_column(JSONB, default=list)     # [{quote,start_sec,speaker}]
+    keywords: Mapped[list] = mapped_column(JSONB, default=list)       # [{term,explanation}]
     summary_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     summary_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
