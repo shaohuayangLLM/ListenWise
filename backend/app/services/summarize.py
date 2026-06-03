@@ -14,7 +14,7 @@ from app.services.provider_config import ResolvedProvider
 
 logger = logging.getLogger(__name__)
 
-_SUMMARY_PROMPT = """你是播客/会议内容分析助手。下面是一段带时间戳的逐字稿，请输出**严格的 JSON**：
+_SUMMARY_PROMPT = """你是播客/会议内容分析助手。下面是一段带时间戳的逐字稿，总时长约 {minutes} 分钟。请输出**严格的 JSON**：
 {{
   "tldr": "1-3 句话概括全文核心",
   "outline": [
@@ -22,7 +22,9 @@ _SUMMARY_PROMPT = """你是播客/会议内容分析助手。下面是一段带�
   ]
 }}
 要求：
-- outline 按主题分 3-8 节；start_sec 必须引用逐字稿中真实出现的时间戳，禁止编造。
+- 按主题划分约 {target} 个章节（可酌情 ±2）。
+- **章节必须在时间轴上均匀覆盖全程**：相邻章节起始时间间隔一般不超过 8 分钟，绝不允许中间留下超过 10 分钟没有章节的空档；逐字稿结尾部分也要有对应章节。
+- start_sec 必须引用逐字稿中真实出现的时间戳，禁止编造，且必须严格递增。
 - 只输出 JSON，不要任何额外文字或 markdown 代码块标记。
 
 逐字稿：
@@ -30,10 +32,17 @@ _SUMMARY_PROMPT = """你是播客/会议内容分析助手。下面是一段带�
 """
 
 
-def _build_transcript_text(segments: list[dict], limit: int = 12000) -> str:
+# qwen-plus 上下文 128K token，中文逐字稿按 ~80000 字封顶（约 2.5 小时播客）仍有充裕余量。
+def _build_transcript_text(segments: list[dict], limit: int = 80000) -> str:
     lines = [f"[{int(s.get('start', 0))}s] {s.get('text', '')}" for s in segments]
     text = "\n".join(lines)
-    return text[:limit]
+    if len(text) > limit:
+        logger.warning(
+            "逐字稿 %d 字超过 %d 字上限，摘要将基于前 %d 字生成（尾部未覆盖）",
+            len(text), limit, limit,
+        )
+        return text[:limit]
+    return text
 
 
 def _extract_json(content: str) -> dict:
@@ -53,7 +62,13 @@ def summarize(segments: list[dict], provider: ResolvedProvider) -> dict:
         return {"tldr": "", "outline": []}
 
     transcript = _build_transcript_text(segments)
-    prompt = _SUMMARY_PROMPT.format(transcript=transcript)
+    duration_sec = int(segments[-1].get("end", 0) or 0)
+    minutes = max(1, duration_sec // 60)
+    # 约每 5 分钟一节，限制在 3~20 节区间
+    target = min(20, max(3, round(minutes / 5)))
+    prompt = _SUMMARY_PROMPT.format(
+        transcript=transcript, minutes=minutes, target=target
+    )
     base = (provider.base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1").rstrip("/")
 
     resp = httpx.post(

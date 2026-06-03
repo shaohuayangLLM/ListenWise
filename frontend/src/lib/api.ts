@@ -32,6 +32,7 @@ export interface Recording {
   note: string | null;
   speaker_count: number;
   folder_id: number | null;
+  is_favorite: boolean;
   progress: number;
   created_at: string;
   updated_at: string;
@@ -75,6 +76,31 @@ export async function getRecording(id: number): Promise<Recording> {
   return data;
 }
 
+export async function updateRecording(
+  id: number,
+  body: { title?: string; is_favorite?: boolean }
+): Promise<Recording> {
+  const { data } = await api.patch<Recording>(`/recordings/${id}`, body);
+  return data;
+}
+
+export async function deleteRecording(id: number): Promise<void> {
+  await api.delete(`/recordings/${id}`);
+}
+
+export interface CreatePodcastParams {
+  url: string;
+  title?: string;
+}
+
+export async function createPodcast({
+  url,
+  title,
+}: CreatePodcastParams): Promise<UploadResponse> {
+  const { data } = await api.post<UploadResponse>("/podcasts", { url, title });
+  return data;
+}
+
 export async function getRecordings(
   page = 1,
   pageSize = 20
@@ -93,17 +119,53 @@ export interface TranscriptSegment {
   text: string;
 }
 
+export interface OutlineItem {
+  title: string;
+  start_sec: number;
+  points: string[];
+}
+
+export interface HighlightItem {
+  quote: string;
+  start_sec: number;
+  speaker?: string;
+}
+
+export interface KeywordItem {
+  term: string;
+  explanation: string;
+}
+
 export interface Transcript {
   id: number;
   recording_id: number;
   segments: TranscriptSegment[];
   full_text: string;
   word_count: number;
+  speaker_labels: Record<string, string>;
+  summary: string | null;
+  outline: OutlineItem[];
+  highlights: HighlightItem[];
+  keywords: KeywordItem[];
+  summary_model: string | null;
+  summary_at: string | null;
 }
 
 // Recording detail with transcript
 export interface RecordingDetail extends Recording {
   transcript: Transcript | null;
+}
+
+export interface SummaryResult {
+  summary: string | null;
+  outline: OutlineItem[];
+  summary_model: string | null;
+  summary_at: string | null;
+}
+
+export async function regenerateSummary(id: number): Promise<SummaryResult> {
+  const { data } = await api.post<SummaryResult>(`/recordings/${id}/summary`);
+  return data;
 }
 
 export async function getRecordingDetail(

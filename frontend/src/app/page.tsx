@@ -235,7 +235,7 @@ export default function HomePage() {
 
         {/* 卡 3：播客链接转写（蓝） */}
         <Link
-          href="/upload"
+          href="/podcast"
           className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-[20px] border border-[rgba(60,90,230,.18)] bg-[linear-gradient(160deg,#E7EBFE_0%,#DCE3FD_70%,#CBD6FB_100%)] p-7 transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(60,90,230,.18)]"
         >
           <span className="absolute right-[18px] top-[18px] rounded-lg bg-[rgba(70,100,235,.55)] px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white backdrop-blur-sm">
@@ -271,7 +271,7 @@ export default function HomePage() {
             播客链接转写
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
-            <p>输入 RSS 订阅链接</p>
+            <p>粘贴单集播客链接</p>
             <p>无需下载，智能提炼总结</p>
           </div>
         </Link>

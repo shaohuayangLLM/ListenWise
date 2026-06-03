@@ -18,6 +18,7 @@
   --accent-3: #e84393;
   --success: #13c25f;
   --warning: #ff8c42;
+  --danger: #e5484d;
 }
 
 @theme inline {
@@ -38,6 +39,7 @@
   --color-accent-3: var(--accent-3);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 body {

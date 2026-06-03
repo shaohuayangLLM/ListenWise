@@ -1,3 +1,6 @@
+import asyncio
+import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
@@ -14,12 +17,15 @@ from app.schemas.recording import (
     ProcessingListResponse,
     RecordingListResponse,
     RecordingResponse,
+    RecordingUpdate,
     RecordingUploadResponse,
     STATUS_PROGRESS,
     StatsResponse,
     recording_to_response,
 )
-from app.services.storage import get_file_url, save_file
+from app.services.storage import UPLOADS_DIR, get_file_url, save_file
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/recordings", tags=["recordings"])
 
@@ -133,6 +139,60 @@ async def get_recording(
     return recording_to_response(recording)
 
 
+@router.patch("/{recording_id}", response_model=RecordingResponse)
+async def update_recording(
+    recording_id: int,
+    body: RecordingUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """重命名 / 收藏：部分更新记录字段。"""
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    recording = result.scalar_one_or_none()
+    if not recording:
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    if body.title is not None:
+        title = body.title.strip()
+        if not title:
+            raise HTTPException(status_code=400, detail="标题不能为空")
+        recording.title = title[:500]
+    if body.is_favorite is not None:
+        recording.is_favorite = body.is_favorite
+
+    await db.commit()
+    await db.refresh(recording)
+    return recording_to_response(recording)
+
+
+@router.delete("/{recording_id}", status_code=204)
+async def delete_recording(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """删除记录（含转写）及本地音频文件。"""
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    recording = result.scalar_one_or_none()
+    if not recording:
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    # 仅删除本地上传文件；播客等外链不动
+    file_url = recording.file_url or ""
+    if not file_url.startswith(("http://", "https://")):
+        local_path = UPLOADS_DIR / os.path.basename(file_url)
+        try:
+            if local_path.exists():
+                local_path.unlink()
+        except OSError as e:  # noqa: BLE001 - 文件删除失败不阻断记录删除
+            logger.warning("删除音频文件失败 %s: %s", local_path, e)
+
+    await db.delete(recording)
+    await db.commit()
+
+
 @router.get("", response_model=RecordingListResponse)
 async def list_recordings(
     page: int = Query(1, ge=1),
@@ -239,5 +299,70 @@ async def get_transcript(
         "segments": transcript.segments,
         "full_text": transcript.full_text,
         "word_count": transcript.word_count,
+        "speaker_labels": transcript.speaker_labels,
+        "summary": transcript.summary,
+        "outline": transcript.outline,
+        "highlights": transcript.highlights,
+        "keywords": transcript.keywords,
+        "summary_model": transcript.summary_model,
+        "summary_at": transcript.summary_at,
         "created_at": transcript.created_at,
     }
+
+
+def _generate_summary_sync(recording_id: int) -> dict:
+    """同步生成/重新生成摘要，供 async endpoint 经线程池调用，避免阻塞事件循环。"""
+    from app.models.base import Capability
+    from app.services.provider_config import resolve_sync
+    from app.services.summarize import summarize
+    from app.sync_db import get_sync_db
+
+    db = get_sync_db()
+    try:
+        transcript = (
+            db.query(Transcript)
+            .filter(Transcript.recording_id == recording_id)
+            .first()
+        )
+        if not transcript or not transcript.segments:
+            return {"ok": False, "error": "转写尚未完成，无法生成摘要"}
+
+        llm = resolve_sync(db, Capability.llm)
+        if not (llm and llm.api_key):
+            return {"ok": False, "error": "未配置大模型，请先在设置中配置"}
+
+        result = summarize(transcript.segments, llm)
+        transcript.summary = result.get("tldr", "")
+        transcript.outline = result.get("outline", [])
+        transcript.summary_model = llm.model
+        transcript.summary_at = datetime.now(timezone.utc)
+        db.commit()
+        return {
+            "ok": True,
+            "data": {
+                "summary": transcript.summary,
+                "outline": transcript.outline,
+                "summary_model": transcript.summary_model,
+                "summary_at": transcript.summary_at.isoformat(),
+            },
+        }
+    finally:
+        db.close()
+
+
+@router.post("/{recording_id}/summary")
+async def generate_summary(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """手动生成 / 重新生成 AI 摘要（覆盖式）。"""
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    out = await asyncio.to_thread(_generate_summary_sync, recording_id)
+    if not out.get("ok"):
+        raise HTTPException(status_code=400, detail=out.get("error", "摘要生成失败"))
+    return out["data"]

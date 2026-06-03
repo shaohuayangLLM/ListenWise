@@ -25,6 +25,7 @@ class Recording(Base, TimestampMixin):
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # 播客原始链接
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     speaker_count: Mapped[int] = mapped_column(default=0)
+    is_favorite: Mapped[bool] = mapped_column(default=False)
 
     user: Mapped["User"] = relationship(back_populates="recordings")
     folder: Mapped["Folder | None"] = relationship(back_populates="recordings")

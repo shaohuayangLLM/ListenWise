@@ -29,6 +29,7 @@ interface TranscriptPanelProps {
   wordCount: number;
   currentTime: number;
   onSeek: (time: number) => void;
+  speakerLabels?: Record<string, string>;
 }
 
 export default function TranscriptPanel({
@@ -36,6 +37,7 @@ export default function TranscriptPanel({
   wordCount,
   currentTime,
   onSeek,
+  speakerLabels = {},
 }: TranscriptPanelProps) {
   const activeRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +94,7 @@ export default function TranscriptPanel({
                 className="text-xs font-medium w-16 shrink-0 pt-0.5"
                 style={{ color: getSpeakerColor(seg.speaker) }}
               >
-                {seg.speaker}
+                {speakerLabels[seg.speaker] || seg.speaker}
               </span>
               <span className="flex-1 leading-relaxed">{seg.text}</span>
             </div>

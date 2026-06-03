@@ -21,11 +21,17 @@ class RecordingResponse(BaseModel):
     note: str | None
     speaker_count: int
     folder_id: int | None
+    is_favorite: bool
     progress: int  # 0-100, computed from status
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class RecordingUpdate(BaseModel):
+    title: str | None = None
+    is_favorite: bool | None = None
 
 
 # Progress percentages mapped from status
@@ -50,6 +56,7 @@ def recording_to_response(recording) -> "RecordingResponse":
         note=recording.note,
         speaker_count=recording.speaker_count,
         folder_id=recording.folder_id,
+        is_favorite=recording.is_favorite,
         progress=progress,
         created_at=recording.created_at,
         updated_at=recording.updated_at,
