@@ -4,6 +4,10 @@ const api = axios.create({
   baseURL: "/api",
 });
 
+// 大文件上传绕过 Next dev 代理的 10MB body 限制：设置后直连后端。
+// 仅 dev 用；生产同域或反代时留空走 /api。
+const UPLOAD_BASE = process.env.NEXT_PUBLIC_UPLOAD_BASE || "";
+
 export interface UploadRecordingParams {
   file: File;
   title: string;
@@ -51,8 +55,8 @@ export async function uploadRecording({
   formData.append("title", title);
   if (note) formData.append("note", note);
 
-  const { data } = await api.post<UploadResponse>(
-    "/recordings/upload",
+  const { data } = await (UPLOAD_BASE ? axios : api).post<UploadResponse>(
+    UPLOAD_BASE ? `${UPLOAD_BASE}/api/recordings/upload` : "/recordings/upload",
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },

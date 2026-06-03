@@ -1,4 +1,5 @@
 from enum import Enum
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
@@ -82,11 +83,13 @@ async def export_recording(
         raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
 
     filename = f"{recording.title}{FILE_EXTENSIONS[format]}"
+    # RFC 5987：文件名含中文等非 ASCII 时必须编码，否则 HTTP header(latin-1) 报错
+    encoded = quote(filename)
 
     return Response(
         content=content,
         media_type=CONTENT_TYPES[format],
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded}",
         },
     )

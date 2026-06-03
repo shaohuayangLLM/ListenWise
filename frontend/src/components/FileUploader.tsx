@@ -121,7 +121,7 @@ export default function FileUploader({ file, onFileChange }: FileUploaderProps) 
           拖拽文件到此处，或点击选择文件
         </p>
         <p className="text-sm text-text-muted">
-          支持 mp3, m4a, wav, mp4, webm 格式，最大 {MAX_SIZE_MB}MB
+          支持 {ALLOWED_EXTENSIONS.join("、")} 格式，最大 {MAX_SIZE_MB}MB
         </p>
         <input
           ref={inputRef}
