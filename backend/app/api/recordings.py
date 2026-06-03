@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
-from app.models.base import RecordingStatus, SceneType
+from app.models.base import RecordingSource, RecordingStatus, SceneType
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 from app.schemas.recording import (
@@ -54,6 +54,7 @@ async def upload_recording(
         # Legacy column retained for existing schema; product no longer asks users
         # to choose a scene before transcription.
         scene_type=SceneType.study_recording,
+        source=RecordingSource.upload,
         status=RecordingStatus.uploading,
         file_url="",
         original_filename=file.filename or "unknown",

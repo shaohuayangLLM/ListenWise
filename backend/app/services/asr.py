@@ -7,8 +7,6 @@ from pathlib import Path
 
 import httpx
 
-from app.config import settings
-
 logger = logging.getLogger(__name__)
 
 MOCK_SEGMENTS = [
@@ -71,21 +69,14 @@ class TranscriptResult:
     speaker_count: int
 
 
-def _get_api_key() -> str:
-    """Get the DashScope API key."""
-    return settings.dashscope_api_key
+async def transcribe(file_path: str, provider=None) -> TranscriptResult:
+    """Transcribe an audio file. ``provider`` is a ResolvedProvider | None.
 
-
-def _use_mock() -> bool:
-    return not _get_api_key()
-
-
-async def transcribe(file_path: str) -> TranscriptResult:
-    """Transcribe an audio file and return structured result."""
-    if _use_mock():
+    无 provider 或无密钥时返回 mock 数据（开发态）。
+    """
+    if provider is None or not getattr(provider, "api_key", ""):
         return _mock_transcribe()
-
-    return await _real_transcribe(file_path)
+    return await _real_transcribe(file_path, provider)
 
 
 def _mock_transcribe() -> TranscriptResult:
@@ -101,31 +92,31 @@ def _mock_transcribe() -> TranscriptResult:
     )
 
 
-def _sync_transcribe(file_path: str) -> TranscriptResult:
-    """Synchronous transcription using DashScope OSS upload + REST API."""
+def _sync_transcribe(file_path: str, provider) -> TranscriptResult:
+    """Synchronous transcription via DashScope/百炼 OSS upload + REST API.
+
+    DashScope Paraformer 与百炼 Fun-ASR 共用此异步录音识别接口，仅 model 名与参数不同。
+    """
     import time
     import dashscope
     from dashscope.utils.oss_utils import OssUtils
 
-    api_key = _get_api_key()
+    api_key = provider.api_key
+    model = provider.model or "paraformer-v2"
+    base_url = (provider.base_url or "https://dashscope.aliyuncs.com/api/v1").rstrip("/")
     dashscope.api_key = api_key
-    logger.info("Using DashScope Paraformer for file: %s", file_path)
+    logger.info("ASR provider=%s model=%s file=%s", provider.provider, model, file_path)
 
-    # Step 1: Upload file to DashScope OSS using SDK's built-in uploader
+    # Step 1: Upload local file to DashScope OSS (SDK uploader)
     logger.info("Uploading file to DashScope OSS...")
-    oss_url, _ = OssUtils.upload(
-        model="paraformer-v2",
-        file_path=file_path,
-        api_key=api_key,
-    )
+    oss_url, _ = OssUtils.upload(model=model, file_path=file_path, api_key=api_key)
     logger.info("File uploaded to OSS: %s", oss_url)
 
-    # Step 2: Submit transcription task via REST API
-    # The SDK doesn't add X-DashScope-OssResourceResolve, so use REST API
+    # Step 2: Submit async transcription via REST (SDK omits the OssResourceResolve header)
     logger.info("Submitting transcription task via REST API...")
     with httpx.Client(timeout=30) as client:
         submit_resp = client.post(
-            "https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription",
+            f"{base_url}/services/audio/asr/transcription",
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
@@ -133,10 +124,11 @@ def _sync_transcribe(file_path: str) -> TranscriptResult:
                 "X-DashScope-OssResourceResolve": "enable",
             },
             json={
-                "model": "paraformer-v2",
+                "model": model,
                 "input": {"file_urls": [oss_url]},
                 "parameters": {
                     "language_hints": ["zh", "en"],
+                    "diarization_enabled": True,  # 说话人分离
                 },
             },
         )
@@ -149,7 +141,7 @@ def _sync_transcribe(file_path: str) -> TranscriptResult:
 
     # Step 3: Poll for completion
     logger.info("Waiting for transcription to complete...")
-    poll_url = f"https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}"
+    poll_url = f"{base_url}/tasks/{task_id}"
 
     with httpx.Client(timeout=30) as client:
         for attempt in range(120):  # max ~10 minutes
@@ -241,8 +233,8 @@ def _parse_result(output) -> TranscriptResult:
     )
 
 
-async def _real_transcribe(file_path: str) -> TranscriptResult:
-    """Transcribe using DashScope Paraformer API."""
+async def _real_transcribe(file_path: str, provider) -> TranscriptResult:
+    """Run the blocking transcription in a thread."""
     import asyncio
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, _sync_transcribe, file_path)
+    return await loop.run_in_executor(None, _sync_transcribe, file_path, provider)

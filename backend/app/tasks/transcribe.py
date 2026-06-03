@@ -2,9 +2,10 @@ import asyncio
 import logging
 
 from app.celery_app import celery_app
-from app.models.base import RecordingStatus
+from app.models.base import Capability, RecordingStatus
 from app.models.recording import Recording
 from app.models.transcript import Transcript
+from app.services.provider_config import resolve_sync
 from app.sync_db import get_sync_db
 
 logger = logging.getLogger(__name__)
@@ -28,12 +29,13 @@ def transcribe_recording(self, recording_id: int):
         db.commit()
         logger.info("Recording %d status -> transcribing", recording_id)
 
-        # 3. Call ASR service (run async function in sync context)
+        # 3. Resolve ASR provider config (DB first, .env fallback) and transcribe
         from app.services.asr import transcribe
 
+        asr_provider = resolve_sync(db, Capability.asr)
         loop = asyncio.new_event_loop()
         try:
-            result = loop.run_until_complete(transcribe(recording.file_url))
+            result = loop.run_until_complete(transcribe(recording.file_url, asr_provider))
         finally:
             loop.close()
 
