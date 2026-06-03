@@ -85,6 +85,22 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 
 **部署规划：** `docs/deployment/部署规划.md`（Vercel + Render + Supabase，复用知识工程栈；最大风险=海外 Render 访问国内阿里云 Fun-ASR/OSS，需前置验证）。
 
+### ✅ M6 — P1 播客前端闭环 + 我的记录操作（2026-06-03）
+
+**P1 播客后端**（先于 M6 完成并真实验证）：播客 API `POST /api/podcasts`（音频直链 / 小宇宙网页链接抓 og:audio/og:title）→ 建 podcast 记录 → 转写 → 自动 LLM summary。小宇宙《声东击西》#390 端到端验证通过。
+
+**M6 前端闭环 + 记录操作（代码 + 真实验证）：**
+
+- 播客输入页 `/podcast`（首页第三张卡修正指向，原误指 /upload）。
+- 详情页 AI 摘要展示：tldr + 听悟「章节速览」时间线大纲（时间戳/圆点竖线/标题卡片，点击 seek），默认前 3 节折叠 +「展开全部章节」，整块可折叠；说话人识别图例（色点+名字+段数）+ `speaker_labels` 名称映射。
+- 摘要「重新生成 / 手动生成」：后端 `POST /api/recordings/{id}/summary`（线程池），上传记录无摘要也可手动生成（recording 17 实测）。
+- 我的记录操作：收藏（置顶+星标）、行内重命名、删除（确认+乐观回滚）；后端 `PATCH`/`DELETE /api/recordings/{id}` + Recording `is_favorite` 字段 + 迁移 `d5a1c3f60b82`。
+- transcript API 补返回 summary/outline/highlights/keywords/speaker_labels 字段。
+
+**摘要质量两处修复**（真实暴露）：① 逐字稿上限 12000→80000 字（修 23 分钟后摘要截断）；② 按时长动态定章节数（约每 5 分钟一节）+ 强制时间轴均匀覆盖、禁大段空档（同一播客 6 节→12 节，最长空档 33min→11min）。
+
+**专项待办**（用户记录、今天不开发）：存储体系（§10.1）+ 公网应用层鉴权/多租户/限流/合规（§10.2），见部署规划 §10。
+
 ---
 
 ## 当前技术栈
@@ -106,8 +122,10 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 | 优先级 | 描述 |
 |--------|------|
 | ✅ P0 地基批 | Provider 配置体系 + Fun-ASR 接入 + 说话人分离 — 已完成并真实验证 |
-| P0 剩余(模块4) | 视频抽音轨(ffmpeg)、上传校验(ffprobe 时长/采样率)、逐字稿编辑 + 说话人重命名/重识别、手动 LLM 总结、导出 include_speakers、删除(前后端全新)、搜索改后端 |
-| P1 | 播客链接转写：音频 URL + RSS 单集解析；transcript+summary 自动产出，highlights+keywords 手动触发 |
+| ✅ P1 播客主体 | 播客链接转写（音频 URL / 小宇宙网页）+ transcript/summary 自动 + 前端闭环 + 摘要质量修复 — 已完成并真实验证 |
+| ✅ 记录操作 | 收藏 / 重命名 / 删除（前后端）— 已完成 |
+| P0 剩余(模块4) | 视频抽音轨(ffmpeg)、上传校验(ffprobe 时长/采样率)、逐字稿编辑 + 说话人重命名/重识别、上传场景手动总结入口、导出 include_speakers、搜索改后端 |
+| P1 剩余 | 播客 highlights/keywords 手动触发；RSS 解析（小宇宙网页 og:audio 已覆盖主场景，优先级低） |
 | P2 | 实时转录：WebSocket 流式（fun-asr-realtime）、partial/final 增量、断线重连、可选翻译开关 |
 | 横切 | 音字联动播放、说话人重命名/重识别、逐字稿编辑、导出可配、AI 能力按内容长度分层触发 |
 
