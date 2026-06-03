@@ -18,7 +18,7 @@ export default function Navbar() {
         </Link>
 
         <div className="order-3 w-full min-w-0 md:order-none md:max-w-[680px] md:flex-1">
-          <form action="/" className="relative">
+          <form action="/records" className="relative">
             <Search
               size={19}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim"

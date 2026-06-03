@@ -75,7 +75,7 @@ There is no longer an LLM document-generation step. Transcription completes stra
 
 - **Next.js 16** with App Router, React 19, Tailwind CSS 4
 - **`next.config.ts`** — `output: "standalone"`, rewrites `/api/*` and `/uploads/*` to backend
-- **`app/globals.css`** — Design tokens as CSS variables (`--accent: #6c5ce7`, etc.) mapped to Tailwind via `@theme inline`
+- **`app/globals.css`** — Design tokens as CSS variables (`--accent: #1e64ff` 听悟蓝, etc.) mapped to Tailwind via `@theme inline`
 - **Pages:** `app/page.tsx` (home — "我的内容" transcript list with top search), `app/upload/` (new transcription), `app/recordings/[id]/` (transcript detail + export)
 - **`lib/api.ts`** — Axios client, all API types and functions. `getRecordingDetail()` fetches recording + transcript
 - **`components/AppSidebar.tsx`** — App-level navigation sidebar
