@@ -121,3 +121,45 @@ export async function getRecordingDetail(
 
   return { ...recording, transcript };
 }
+
+// ===== 模型设置（Provider 配置）=====
+export interface ProviderConfig {
+  capability: string;
+  provider: string;
+  model: string;
+  base_url: string | null;
+  enabled: boolean;
+  api_key_masked: string;
+  configured: boolean;
+}
+
+export interface ProviderConfigUpdate {
+  provider: string;
+  model: string;
+  api_key?: string | null;
+  base_url?: string | null;
+  enabled?: boolean;
+}
+
+export async function getProviders(): Promise<ProviderConfig[]> {
+  const { data } = await api.get<ProviderConfig[]>("/settings/providers");
+  return data;
+}
+
+export async function updateProvider(
+  capability: string,
+  body: ProviderConfigUpdate
+): Promise<ProviderConfig> {
+  const { data } = await api.put<ProviderConfig>(
+    `/settings/providers/${capability}`,
+    body
+  );
+  return data;
+}
+
+export async function testProvider(
+  capability: string
+): Promise<{ ok: boolean; message: string }> {
+  const { data } = await api.post(`/settings/providers/${capability}/test`);
+  return data;
+}
