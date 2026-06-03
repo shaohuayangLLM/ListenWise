@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.models.base import RecordingStatus, SceneType
-from app.models.document import Document
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 from app.schemas.recording import (
@@ -29,7 +28,6 @@ router = APIRouter(prefix="/api/recordings", tags=["recordings"])
 async def upload_recording(
     file: UploadFile,
     title: str = Form(...),
-    scene_type: SceneType = Form(...),
     note: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
 ):
@@ -53,7 +51,9 @@ async def upload_recording(
     recording = Recording(
         user_id=1,  # MVP: hardcoded user
         title=title,
-        scene_type=scene_type,
+        # Legacy column retained for existing schema; product no longer asks users
+        # to choose a scene before transcription.
+        scene_type=SceneType.study_recording,
         status=RecordingStatus.uploading,
         file_url="",
         original_filename=file.filename or "unknown",
@@ -98,7 +98,6 @@ async def list_processing_recordings(
             Recording.status.in_([
                 RecordingStatus.uploading,
                 RecordingStatus.transcribing,
-                RecordingStatus.analyzing,
             ])
         )
         .order_by(Recording.created_at.desc())
@@ -106,12 +105,11 @@ async def list_processing_recordings(
     recordings = result.scalars().all()
 
     items = [
-        ProcessingItem(
-            id=r.id,
-            title=r.title,
-            scene_type=r.scene_type,
-            status=r.status,
-            progress=STATUS_PROGRESS.get(r.status, 0),
+            ProcessingItem(
+                id=r.id,
+                title=r.title,
+                status=r.status,
+                progress=STATUS_PROGRESS.get(r.status, 0),
             created_at=r.created_at,
         )
         for r in recordings
@@ -138,21 +136,16 @@ async def get_recording(
 async def list_recordings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    scene_type: SceneType | None = Query(None),
     status: RecordingStatus | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     query = select(Recording).order_by(Recording.created_at.desc())
 
-    if scene_type:
-        query = query.where(Recording.scene_type == scene_type)
     if status:
         query = query.where(Recording.status == status)
 
     # Count total
     count_query = select(func.count()).select_from(Recording)
-    if scene_type:
-        count_query = count_query.where(Recording.scene_type == scene_type)
     if status:
         count_query = count_query.where(Recording.status == status)
 
@@ -195,7 +188,6 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
             Recording.status.in_([
                 RecordingStatus.uploading,
                 RecordingStatus.transcribing,
-                RecordingStatus.analyzing,
             ])
         )
     )
@@ -247,34 +239,4 @@ async def get_transcript(
         "full_text": transcript.full_text,
         "word_count": transcript.word_count,
         "created_at": transcript.created_at,
-    }
-
-
-@router.get("/{recording_id}/document")
-async def get_document(
-    recording_id: int,
-    db: AsyncSession = Depends(get_db),
-):
-    """Get the generated document for a recording."""
-    result = await db.execute(
-        select(Recording).where(Recording.id == recording_id)
-    )
-    recording = result.scalar_one_or_none()
-    if not recording:
-        raise HTTPException(status_code=404, detail="Recording not found")
-
-    result = await db.execute(
-        select(Document).where(Document.recording_id == recording_id)
-    )
-    document = result.scalar_one_or_none()
-    if not document:
-        raise HTTPException(status_code=404, detail="Document not ready yet")
-
-    return {
-        "id": document.id,
-        "recording_id": document.recording_id,
-        "scene_type": document.scene_type,
-        "content": document.content,
-        "format_version": document.format_version,
-        "created_at": document.created_at,
     }

@@ -29,9 +29,6 @@ class Recording(Base, TimestampMixin):
     transcript: Mapped["Transcript | None"] = relationship(
         back_populates="recording", uselist=False
     )
-    document: Mapped["Document | None"] = relationship(
-        back_populates="recording", uselist=False
-    )
     tags: Mapped[list["Tag"]] = relationship(
         secondary=recording_tags, back_populates="recordings"
     )

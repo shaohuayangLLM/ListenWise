@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
+import AppSidebar from "@/components/AppSidebar";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "ListenWise - 智能录音转文档平台",
-  description: "智能录音转文档平台，支持语音识别、场景化文档生成",
+  title: "ListenWise - 音频转写工具",
+  description: "支持音频上传、浏览器录音、逐字稿查看和导出",
 };
 
 export default function RootLayout({
@@ -16,7 +18,14 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className="antialiased">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
+        <div className="flex min-h-[calc(100vh-72px)]">
+          <Suspense fallback={null}>
+            <AppSidebar />
+          </Suspense>
+          <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

@@ -1,20 +1,14 @@
 # ListenWise
 
-智能录音转文档平台 — 将工作会议、电话录音、学习笔记等各种音频文件，自动转录并生成结构化的场景文档。
+音频转写工具 — 上传本地音频或使用浏览器录音，生成可查看、可跳转、可导出的逐字稿。
 
 ## 功能特性
 
-- **语音转文字**：基于 DashScope Paraformer-v2，支持中英文混合识别和多说话人分离
-- **场景化文档生成**：6 种预设场景，由 LLM 自动生成对应结构的文档
-  - 需求评审 → 需求清单 + 讨论要点 + 决策 + 行动项
-  - 汇报会议 → 关键数据 + 问答记录 + 行动计划
-  - 领导大会 → 核心要点 + 政策方向 + 金句摘录
-  - 家长会 → 老师反馈 + 学习建议 + 家长待办
-  - 电话录音 → 关键信息 + 承诺事项 + 后续跟进
-  - 学习录音 → 知识大纲 + 重点笔记 + 概念解释
-- **音频播放 + 转录联动**：点击转录文本跳转到对应音频位置，播放时自动高亮当前段落
-- **文件夹管理**：支持多层级文件夹整理录音
-- **文档导出**：支持 Word（DOCX）和 PDF 格式导出
+- **离线音频转写**：上传 mp3、m4a、wav、mp4、webm、ogg、flac、aac 等文件后异步转写
+- **浏览器录音**：在 Web 端录音，录音完成后进入同一套转写流程
+- **音频播放 + 转写联动**：点击转写段落跳转到对应音频位置，播放时高亮当前段落
+- **说话人标注**：保留 ASR 返回的说话人信息；具体稳定性取决于所选 ASR provider
+- **逐字稿导出**：支持 Markdown、TXT、SRT、VTT，方便后续交给 LLM/Codex 做分析
 
 ## 技术栈
 
@@ -24,29 +18,21 @@
 | 后端 | FastAPI + SQLAlchemy 2.0 + Alembic |
 | 任务队列 | Celery + Redis |
 | 数据库 | PostgreSQL 16 |
-| ASR | DashScope Paraformer-v2 |
-| LLM | qwen-plus（DashScope OpenAI 兼容端点）|
-| 部署 | Docker Compose（5 个服务）|
+| ASR | DashScope Paraformer-v2（当前实现） |
+| 部署 | Docker Compose |
 
 ## 快速开始
 
-### 1. 克隆仓库
-
-```bash
-git clone https://github.com/shaohuayangLLM/ListenWise.git
-cd ListenWise
-```
-
-### 2. 配置环境变量
+### 1. 配置环境变量
 
 ```bash
 cp backend/.env.example backend/.env
-# 编辑 backend/.env，填入你的 DashScope API Key
+# 编辑 backend/.env，填入 DashScope API Key
 # DASHSCOPE_API_KEY=sk-your-key-here
-# 不填 key 也可以启动，ASR 和 LLM 会使用 mock 数据
+# 不填 key 也可以启动，ASR 会使用 mock 数据
 ```
 
-### 3. Docker 一键启动
+### 2. Docker 一键启动
 
 ```bash
 docker-compose up --build
@@ -57,13 +43,12 @@ docker-compose up --build
 - 后端 API：http://localhost:8000
 - 健康检查：http://localhost:8000/api/health
 
-### 本地开发（不用 Docker）
+### 本地开发
 
 **后端：**
 ```bash
 cd backend
 pip install -e ".[dev]"
-# 确保 PostgreSQL 和 Redis 已启动
 alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 # 另起终端
@@ -79,40 +64,48 @@ npm run dev
 
 ## 处理流程
 
-```
-上传音频 → FastAPI 接收 → Celery 异步任务
-                              ↓
-                    DashScope Paraformer-v2 语音转录
-                              ↓
-                    保存转录文本（含时间戳 + 说话人）
-                              ↓
-                    qwen-plus LLM 生成场景化文档
-                              ↓
-                    保存结构化文档（JSON）→ 前端展示
+```text
+上传音频 / 浏览器录音
+        ↓
+FastAPI 保存文件
+        ↓
+Celery 调用 ASR 转写
+        ↓
+保存逐字稿（segments + full_text）
+        ↓
+前端展示音频、时间戳、说话人、逐字稿
+        ↓
+导出 Markdown / TXT / SRT / VTT
 ```
 
 ## 项目结构
 
-```
+```text
 ListenWise/
 ├── backend/
 │   ├── app/
-│   │   ├── api/            # FastAPI 路由（recordings, search, export）
-│   │   ├── models/         # SQLAlchemy 模型（Recording, Transcript, Document, Folder, Tag）
-│   │   ├── services/       # 业务逻辑（asr, llm, templates, export, storage）
-│   │   ├── tasks/          # Celery 异步任务（transcribe, generate_doc）
+│   │   ├── api/            # FastAPI 路由（recordings, export）
+│   │   ├── models/         # SQLAlchemy 模型（Recording, Transcript 等）
+│   │   ├── services/       # 业务逻辑（asr, export, storage）
+│   │   ├── tasks/          # Celery 异步任务（transcribe）
 │   │   ├── config.py       # Pydantic Settings 配置
 │   │   └── main.py         # FastAPI 入口
 │   ├── alembic/            # 数据库迁移
 │   └── pyproject.toml
 ├── frontend/
 │   └── src/
-│       ├── app/            # Next.js 页面（首页, 上传, 详情, 资料库, 设置）
-│       ├── components/     # React 组件（AudioPlayer, TranscriptPanel, DocumentPanel 等）
+│       ├── app/            # Next.js 页面（任务列表、上传、详情）
+│       ├── components/     # React 组件（AudioPlayer, TranscriptPanel 等）
 │       └── lib/api.ts      # API 客户端
-├── docs/                   # 设计文档和开发日志
+├── docs/
 └── docker-compose.yml
 ```
+
+## 后续方向
+
+- ASR provider 抽象：本地 Whisper/FunASR、DashScope、通义听悟、火山引擎等可选
+- 真正实时转写：浏览器分片发送音频，后端返回 partial/final 文本
+- 转写编辑：支持修改文字、说话人名称和时间段
 
 ## License
 

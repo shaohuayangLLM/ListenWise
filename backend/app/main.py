@@ -5,7 +5,6 @@ from fastapi.staticfiles import StaticFiles
 from app.api.recordings import router as recordings_router
 from app.api.recordings import stats_router
 from app.api.export import router as export_router
-from app.api.search import router as search_router
 from app.config import settings
 from app.services.storage import UPLOADS_DIR
 
@@ -26,7 +25,6 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 # Register routers
 app.include_router(recordings_router)
 app.include_router(stats_router)
-app.include_router(search_router)
 app.include_router(export_router)
 
 

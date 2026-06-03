@@ -1,7 +1,7 @@
 [project]
 name = "listenwise-backend"
 version = "0.1.0"
-description = "ListenWise - 智能录音转文档后端服务"
+description = "ListenWise - 音频转写后端服务"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
@@ -20,8 +20,6 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "python-dotenv>=1.0.0",
     "oss2>=2.19.0",
-    "python-docx>=1.1.0",
-    "fpdf2>=2.8.0",
     "dashscope>=1.20.0",
     "greenlet>=3.0.0",
 ]

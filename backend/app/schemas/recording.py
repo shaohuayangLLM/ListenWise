@@ -2,19 +2,17 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.base import RecordingStatus, SceneType
+from app.models.base import RecordingStatus
 
 
 class RecordingCreate(BaseModel):
     title: str
-    scene_type: SceneType
     note: str | None = None
 
 
 class RecordingResponse(BaseModel):
     id: int
     title: str
-    scene_type: SceneType
     status: RecordingStatus
     file_url: str
     original_filename: str
@@ -33,8 +31,7 @@ class RecordingResponse(BaseModel):
 # Progress percentages mapped from status
 STATUS_PROGRESS = {
     RecordingStatus.uploading: 10,
-    RecordingStatus.transcribing: 40,
-    RecordingStatus.analyzing: 70,
+    RecordingStatus.transcribing: 60,
     RecordingStatus.done: 100,
     RecordingStatus.failed: 0,
 }
@@ -45,7 +42,6 @@ def recording_to_response(recording) -> "RecordingResponse":
     return RecordingResponse(
         id=recording.id,
         title=recording.title,
-        scene_type=recording.scene_type,
         status=recording.status,
         file_url=recording.file_url,
         original_filename=recording.original_filename,
@@ -70,7 +66,6 @@ class RecordingListResponse(BaseModel):
 class ProcessingItem(BaseModel):
     id: int
     title: str
-    scene_type: SceneType
     status: RecordingStatus
     progress: int
     created_at: datetime

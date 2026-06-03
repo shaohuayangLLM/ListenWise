@@ -54,17 +54,11 @@ def transcribe_recording(self, recording_id: int):
         db.add(transcript)
 
         # 5. Update Recording status and speaker_count
-        recording.status = RecordingStatus.analyzing
+        recording.status = RecordingStatus.done
         recording.speaker_count = result.speaker_count
         recording.duration = int(result.segments[-1]["end"]) if result.segments else 0
         db.commit()
-        logger.info("Recording %d status -> analyzing", recording_id)
-
-        # 6. Trigger document generation
-        from app.tasks.generate_doc import generate_document_task
-
-        generate_document_task.delay(recording_id)
-        logger.info("Triggered document generation for recording %d", recording_id)
+        logger.info("Recording %d status -> done", recording_id)
 
     except Exception as e:
         logger.exception("Transcription failed for recording %d: %s", recording_id, e)

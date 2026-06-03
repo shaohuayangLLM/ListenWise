@@ -57,7 +57,7 @@ export default function WebRecorder({
     return cleanup;
   }, [cleanup]);
 
-  const updateVolume = useCallback(() => {
+  function updateVolume() {
     const analyser = analyserRef.current;
     if (!analyser) return;
 
@@ -73,7 +73,7 @@ export default function WebRecorder({
     setVolumeLevel(Math.min(1, rms * 3));
 
     animFrameRef.current = requestAnimationFrame(updateVolume);
-  }, []);
+  }
 
   const startRecording = async () => {
     setError(null);

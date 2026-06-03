@@ -4,14 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Mic } from "lucide-react";
 import FileUploader from "@/components/FileUploader";
-import SceneSelector from "@/components/SceneSelector";
 import WebRecorder from "@/components/WebRecorder";
 import { uploadRecording } from "@/lib/api";
 
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
-  const [sceneType, setSceneType] = useState("requirement_review");
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -33,7 +31,6 @@ export default function UploadPage() {
       await uploadRecording({
         file,
         title: title || file.name.replace(/\.[^.]+$/, ""),
-        scene_type: sceneType,
         note: note || undefined,
         onProgress: setProgress,
       });
@@ -53,9 +50,9 @@ export default function UploadPage() {
 
   return (
     <div className="max-w-[720px] mx-auto py-6">
-      <h1 className="text-2xl font-bold text-center mb-2">上传录音</h1>
+      <h1 className="text-2xl font-bold text-center mb-2">新建转写</h1>
       <p className="text-center text-text-dim text-sm mb-9">
-        支持 mp3、m4a、wav、mp4、webm 格式，单文件最大 500MB
+        上传本地音频，或用浏览器录音后转成逐字稿
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -84,19 +81,13 @@ export default function UploadPage() {
           </button>
         )}
 
-        {/* Scene Selector */}
-        <div>
-          <h3 className="text-base font-semibold mb-4">选择场景类型</h3>
-          <SceneSelector value={sceneType} onChange={setSceneType} />
-        </div>
-
         {/* Additional Info */}
         <div>
           <h3 className="text-base font-semibold mb-4">补充信息（可选）</h3>
           <div className="space-y-3">
             <input
               type="text"
-              placeholder="录音标题，如：Q1产品评审会"
+              placeholder="标题，如：6月2日客户沟通录音"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"

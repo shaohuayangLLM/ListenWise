@@ -1,5 +1,4 @@
 from app.models.base import RecordingStatus, SceneType
-from app.models.document import Document
 from app.models.folder import Folder
 from app.models.recording import Recording
 from app.models.tag import Tag, recording_tags
@@ -10,7 +9,6 @@ __all__ = [
     "User",
     "Recording",
     "Transcript",
-    "Document",
     "Folder",
     "Tag",
     "recording_tags",

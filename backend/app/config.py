@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # DashScope (unified key for ASR + LLM)
+    # DashScope ASR
     dashscope_api_key: str = ""
 
     # Aliyun OSS
@@ -24,11 +24,6 @@ class Settings(BaseSettings):
     asr_access_key_id: str = ""
     asr_access_key_secret: str = ""
     asr_app_key: str = ""
-
-    # LLM
-    llm_api_key: str = ""
-    llm_base_url: str = ""
-    llm_model: str = "qwen-plus"
 
     # Upload
     max_file_size_mb: int = 500

@@ -27,3 +27,7 @@ dump.rdb
 # IDE
 .vscode/
 .idea/
+
+# Temporary screenshots / scratch artifacts
+.tmp-*
+*.tmp.png
