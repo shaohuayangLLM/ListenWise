@@ -2,8 +2,8 @@
 
 ## 当前状态
 
-**阶段：** 需求重定向 + 首页改版
-**分支：** `main`
+**阶段：** P0 研发 — 地基批完成 + 真实端到端验证通过
+**分支：** `main`（已推 GitHub）
 **最后更新：** 2026-06-03
 
 ---
@@ -67,6 +67,24 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - 需求设计纪要 `docs/product/2026-06-03-功能需求设计纪要.md`：定位转变、D1–D8 决策、Provider 配置体系、三功能需求设计、播客总结 schema
 - 关键决策：按能力维度配置 Provider（D1）、B 路线百炼自研总结（D5，附不选听悟 API 的决策记录）、播客产物分层触发（D8）
 
+### ✅ M5 — P0 研发地基批 + 真实端到端验证（2026-06-03）
+
+**P0 PRD：** `docs/product/PRD-上传音视频转写.md`（标准 7 章，经 Codex + 独立 Agent 双模型评审，修完 15 条 Finding）。
+
+**地基批三模块（代码 + 迁移 + 真实验证）：**
+
+- 模块1 数据模型：新增 `processing` 状态、`RecordingSource`/`Capability` 枚举、Recording `source` 字段、Transcript 的说话人映射/已编辑/摘要字段、`ModelProviderConfig` 表；迁移 `b2f4a1c8e9d3` 已 `alembic upgrade head` 验证。
+- 模块2 Provider 配置体系：`crypto.py`（Fernet 加密）+ `provider_config.py`（按能力 resolve，DB 优先 .env 兜底）+ `api/settings.py`（GET/PUT/连接测试）+ 设置页 `app/settings/page.tsx`。
+- 模块3 ASR Provider 抽象：`asr.py` 参数化（DashScope/Fun-ASR 共用异步录音接口 + 说话人分离）；transcribe 任务读配置。
+
+**真实端到端验证（起 redis + celery + uvicorn + postgres）：**
+
+- Fun-ASR 真实转写跑通：小 wav 8s、真实 22.9MB m4a 出稿 563 段，中文准确、时间戳正确。
+- **说话人分离修复**：根因是解析读 `spk_id`、而 fun-asr 返回 `speaker_id`；改读 `speaker_id` 后多人对话正确分出 A/B（fun-asr 仅单声道支持 diarization）。
+- 其它真实 bug 修复：导出中文文件名崩（latin-1 → RFC 5987 编码）、ogg 格式文案、大文件上传直连后端绕过 Next dev 10MB 代理、config `LLM_*` 启动报错。
+
+**部署规划：** `docs/deployment/部署规划.md`（Vercel + Render + Supabase，复用知识工程栈；最大风险=海外 Render 访问国内阿里云 Fun-ASR/OSS，需前置验证）。
+
 ---
 
 ## 当前技术栈
@@ -87,7 +105,8 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 
 | 优先级 | 描述 |
 |--------|------|
-| P0 | 上传音视频转写：Provider 配置体系、ffmpeg 抽音轨、格式/采样率前置校验、说话人+时间戳、手动 LLM 总结 |
+| ✅ P0 地基批 | Provider 配置体系 + Fun-ASR 接入 + 说话人分离 — 已完成并真实验证 |
+| P0 剩余(模块4) | 视频抽音轨(ffmpeg)、上传校验(ffprobe 时长/采样率)、逐字稿编辑 + 说话人重命名/重识别、手动 LLM 总结、导出 include_speakers、删除(前后端全新)、搜索改后端 |
 | P1 | 播客链接转写：音频 URL + RSS 单集解析；transcript+summary 自动产出，highlights+keywords 手动触发 |
 | P2 | 实时转录：WebSocket 流式（fun-asr-realtime）、partial/final 增量、断线重连、可选翻译开关 |
 | 横切 | 音字联动播放、说话人重命名/重识别、逐字稿编辑、导出可配、AI 能力按内容长度分层触发 |
