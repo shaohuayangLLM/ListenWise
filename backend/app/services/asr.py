@@ -199,7 +199,8 @@ def _parse_result(output) -> TranscriptResult:
         transcripts = data.get("transcripts", [])
         for t in transcripts:
             for sentence in t.get("sentences", []):
-                spk_id = sentence.get("spk_id", 0)
+                # fun-asr REST 返回字段是 speaker_id；旧 SDK/paraformer 用 spk_id，两者兼容
+                spk_id = sentence.get("speaker_id", sentence.get("spk_id", 0))
                 if isinstance(spk_id, int):
                     speaker_label = chr(65 + spk_id)
                 else:
