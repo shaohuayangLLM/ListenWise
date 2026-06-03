@@ -107,10 +107,14 @@ def _sync_transcribe(file_path: str, provider) -> TranscriptResult:
     dashscope.api_key = api_key
     logger.info("ASR provider=%s model=%s file=%s", provider.provider, model, file_path)
 
-    # Step 1: Upload local file to DashScope OSS (SDK uploader)
-    logger.info("Uploading file to DashScope OSS...")
-    oss_url, _ = OssUtils.upload(model=model, file_path=file_path, api_key=api_key)
-    logger.info("File uploaded to OSS: %s", oss_url)
+    # Step 1: 公网 URL（播客）直接用；本地文件先上传到 DashScope OSS
+    if file_path.startswith(("http://", "https://")):
+        oss_url = file_path
+        logger.info("Using public audio URL directly: %s", oss_url)
+    else:
+        logger.info("Uploading local file to DashScope OSS...")
+        oss_url, _ = OssUtils.upload(model=model, file_path=file_path, api_key=api_key)
+        logger.info("File uploaded to OSS: %s", oss_url)
 
     # Step 2: Submit async transcription via REST (SDK omits the OssResourceResolve header)
     logger.info("Submitting transcription task via REST API...")
