@@ -2,7 +2,7 @@ from sqlalchemy import BigInteger, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-from app.models.base import RecordingStatus, SceneType, TimestampMixin
+from app.models.base import RecordingSource, RecordingStatus, SceneType, TimestampMixin
 from app.models.tag import recording_tags
 
 
@@ -21,6 +21,7 @@ class Recording(Base, TimestampMixin):
     duration: Mapped[int] = mapped_column(default=0)  # seconds
     file_size: Mapped[int] = mapped_column(BigInteger, default=0)  # bytes
     status: Mapped[RecordingStatus] = mapped_column(default=RecordingStatus.uploading)
+    source: Mapped[RecordingSource] = mapped_column(default=RecordingSource.upload)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     speaker_count: Mapped[int] = mapped_column(default=0)
 

@@ -1,4 +1,6 @@
-from sqlalchemy import ForeignKey, Integer, Text
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,5 +19,13 @@ class Transcript(Base, TimestampMixin):
     # segments format: [{"start": 0.0, "end": 5.2, "speaker": "A", "text": "..."}]
     full_text: Mapped[str] = mapped_column(Text, default="")
     word_count: Mapped[int] = mapped_column(Integer, default=0)
+    # speaker display-name overrides, e.g. {"A": "张三"}
+    speaker_labels: Mapped[dict] = mapped_column(JSONB, default=dict)
+    is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    summary_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     recording: Mapped["Recording"] = relationship(back_populates="transcript")

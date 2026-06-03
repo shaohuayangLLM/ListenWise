@@ -18,10 +18,23 @@ class TimestampMixin:
 
 class RecordingStatus(str, enum.Enum):
     uploading = "uploading"
+    processing = "processing"
     transcribing = "transcribing"
-    analyzing = "analyzing"
+    analyzing = "analyzing"  # legacy, no longer produced
     done = "done"
     failed = "failed"
+
+
+class RecordingSource(str, enum.Enum):
+    upload = "upload"
+    podcast = "podcast"
+    realtime = "realtime"
+
+
+class Capability(str, enum.Enum):
+    asr = "asr"
+    llm = "llm"
+    translate = "translate"
 
 
 class SceneType(str, enum.Enum):
