@@ -30,7 +30,10 @@ class Recording(Base, TimestampMixin):
     user: Mapped["User"] = relationship(back_populates="recordings")
     folder: Mapped["Folder | None"] = relationship(back_populates="recordings")
     transcript: Mapped["Transcript | None"] = relationship(
-        back_populates="recording", uselist=False
+        back_populates="recording",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     tags: Mapped[list["Tag"]] = relationship(
         secondary=recording_tags, back_populates="recordings"
