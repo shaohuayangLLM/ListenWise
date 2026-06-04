@@ -1,7 +1,7 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, engine_from_config, pool
 
 from alembic import context
 
@@ -13,17 +13,19 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Allow DATABASE_URL env var to override alembic.ini (convert asyncpg to psycopg2)
-db_url = os.environ.get("DATABASE_URL")
-if db_url:
-    sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-    config.set_main_option("sqlalchemy.url", sync_url)
+# DATABASE_URL 环境变量覆盖 alembic.ini，并转成 sync 驱动（psycopg2）。
+# 直接存为模块变量、绕过 config.set_main_option —— 否则 configparser 会把
+# 密码里的 % 当成插值语法报错（例如密码含特殊字符编码后的 %23）。
+_db_url = os.environ.get("DATABASE_URL")
+SYNC_URL = (
+    _db_url.replace("postgresql+asyncpg://", "postgresql://") if _db_url else None
+)
 
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = SYNC_URL or config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -35,11 +37,14 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    if SYNC_URL:
+        connectable = create_engine(SYNC_URL, poolclass=pool.NullPool)
+    else:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
