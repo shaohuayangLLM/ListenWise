@@ -2,9 +2,9 @@
 
 ## 当前状态
 
-**阶段：** P0 研发 — 地基批完成 + 真实端到端验证通过
+**阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `main`（已推 GitHub）
-**最后更新：** 2026-06-03
+**最后更新：** 2026-06-04
 
 ---
 
@@ -101,19 +101,23 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 
 **专项待办**（用户记录、今天不开发）：存储体系（§10.1）+ 公网应用层鉴权/多租户/限流/合规（§10.2），见部署规划 §10。
 
-### 🚧 M7 — 公网部署（受控 Demo，2026-06-04，代码就绪待上线）
+### ✅ M7 — 公网部署上线（受控 Demo，2026-06-04）
 
-挂到 `ainside.cn` 主页下方，形态=**受控 Demo（访问口令）**。
+挂到 `ainside.cn` 主页下方，形态=**受控 Demo（访问口令）**。**已上线**：
 
-- **阶段① 跨境验证 ✅ 通过**：Render(Singapore) 实测海外→国内阿里云 Fun-ASR **3/3 成功、13-20s、几乎无劣化** → 后端用 Render 即可，无需转国内。详见部署规划 §5。
-- **阶段② 代码全就绪 + 本地验证 + 已 push**（等用户控制台操作上线）：
-  - 转写去 Celery 化（FastAPI BackgroundTasks 同进程，Render free 无需 Redis/Celery）。
-  - 访问口令鉴权（后端中间件 + 前端口令门，本地无口令自动放行）。
-  - 前端直连 Render（绕 Vercel body 限制）+ 导出/音频地址适配。
-  - `render.yaml` 完整版（alembic 迁移 + 完整 env）。
-  - 主页 `portfolio-2025/index.html` 入口卡片（占位域名待替换）。
-- **手册**：`docs/deployment/阶段2-完整部署手册.md`（Supabase→Render→Vercel→主页）。
+| 项 | 地址 |
+|----|------|
+| 前端 | https://listen-wise.vercel.app（口令在 Render `ACCESS_PASSCODE`） |
+| 后端 | https://listenwise-api.onrender.com |
+| 数据库 | Supabase Postgres（Singapore, Session pooler） |
+
+- **阶段① 跨境验证 ✅**：Render(Singapore) 实测海外→国内阿里云 Fun-ASR **3/3 成功、13-20s、几乎无劣化** → 后端用 Render，无需转国内。
+- **阶段② 部署改造 ✅**：转写去 Celery 化（FastAPI BackgroundTasks 同进程）；访问口令鉴权（后端中间件 + 前端口令门）；前端直连 Render（绕 Vercel body 限制）；`render.yaml`（alembic 迁移 + 完整 env）；全局异常处理器（补 CORS 头 + 暴露真实错误）；种子迁移 `e6f2a4b9c1d8`（默认用户）。
+- **生产验证 ✅**：上传→入库→转写、播客解析、摘要均通过。
+- **主页入口 ✅**：`portfolio-2025/index.html`「AI 协同成果」加 ListenWise 卡片，已替换真实域名并 push。
+- **部署文档**：`docs/deployment/`（README 导航 + `部署规划.md` 决策 + `部署实战手册.md` 操作含 9 个踩坑速查）。
 - **已知取舍**：上传原音频不持久化（Render 临时盘）；仍单用户模型。受控 Demo 可接受，后续可升级。
+- **待优化**：安全轮换（Supabase 密码 + 访问口令曾入对话/日志）；异常处理器返回 `str(exc)` 待收敛为笼统提示；Render 免费实例休眠冷启动 ~50s。
 
 ---
 
