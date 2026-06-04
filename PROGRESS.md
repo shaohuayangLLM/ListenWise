@@ -101,6 +101,20 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 
 **专项待办**（用户记录、今天不开发）：存储体系（§10.1）+ 公网应用层鉴权/多租户/限流/合规（§10.2），见部署规划 §10。
 
+### 🚧 M7 — 公网部署（受控 Demo，2026-06-04，代码就绪待上线）
+
+挂到 `ainside.cn` 主页下方，形态=**受控 Demo（访问口令）**。
+
+- **阶段① 跨境验证 ✅ 通过**：Render(Singapore) 实测海外→国内阿里云 Fun-ASR **3/3 成功、13-20s、几乎无劣化** → 后端用 Render 即可，无需转国内。详见部署规划 §5。
+- **阶段② 代码全就绪 + 本地验证 + 已 push**（等用户控制台操作上线）：
+  - 转写去 Celery 化（FastAPI BackgroundTasks 同进程，Render free 无需 Redis/Celery）。
+  - 访问口令鉴权（后端中间件 + 前端口令门，本地无口令自动放行）。
+  - 前端直连 Render（绕 Vercel body 限制）+ 导出/音频地址适配。
+  - `render.yaml` 完整版（alembic 迁移 + 完整 env）。
+  - 主页 `portfolio-2025/index.html` 入口卡片（占位域名待替换）。
+- **手册**：`docs/deployment/阶段2-完整部署手册.md`（Supabase→Render→Vercel→主页）。
+- **已知取舍**：上传原音频不持久化（Render 临时盘）；仍单用户模型。受控 Demo 可接受，后续可升级。
+
 ---
 
 ## 当前技术栈
