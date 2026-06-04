@@ -1,0 +1,24 @@
+# ListenWise 后端 — 阶段① 跨境验证最小部署
+#
+# 用途：部署到 Render（Singapore），实测海外服务器调用国内阿里云 Fun-ASR
+#       的延迟与成功率，决定后端是否能落在海外（go/no-go）。
+# 阶段① 只需 web 服务，不需要 Redis / Celery / 数据库。
+#
+# 在 Render 用「Blueprint」方式导入本仓库即可自动按此创建服务。
+services:
+  - type: web
+    name: listenwise-api
+    runtime: python
+    rootDir: backend
+    region: singapore       # 离中国最近，跨境延迟相对最低
+    plan: free              # 免费实例会休眠，首次访问需冷启动
+    buildCommand: pip install -e .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DASHSCOPE_API_KEY   # 你的百炼 key（Fun-ASR + qwen 共用）
+        sync: false              # 不写进仓库，部署时在 Render 控制台填
+      - key: ASR_PROVIDER
+        value: fun_asr
+      - key: DIAG_TOKEN          # 自定义一个口令，调诊断端点时用 header 带上
+        sync: false

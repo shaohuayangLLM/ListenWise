@@ -7,6 +7,7 @@ from app.api.recordings import stats_router
 from app.api.export import router as export_router
 from app.api.settings import router as settings_router
 from app.api.podcasts import router as podcasts_router
+from app.api.diag import router as diag_router
 from app.config import settings
 from app.services.storage import UPLOADS_DIR
 
@@ -30,6 +31,7 @@ app.include_router(stats_router)
 app.include_router(export_router)
 app.include_router(settings_router)
 app.include_router(podcasts_router)
+app.include_router(diag_router)  # 阶段① 跨境验证，临时
 
 
 @app.get("/api/health")
