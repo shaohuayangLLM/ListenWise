@@ -11,9 +11,8 @@ from app.sync_db import get_sync_db
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(bind=True)
-def transcribe_recording(self, recording_id: int):
-    """Transcribe a recording using ASR service."""
+def run_transcription(recording_id: int):
+    """转写一条记录（同步执行，供 FastAPI BackgroundTasks 或 Celery 调用）。"""
     logger.info("Starting transcription for recording %d", recording_id)
 
     db = get_sync_db()
@@ -87,6 +86,11 @@ def transcribe_recording(self, recording_id: int):
         if recording:
             recording.status = RecordingStatus.failed
             db.commit()
-        raise
     finally:
         db.close()
+
+
+@celery_app.task(bind=True)
+def transcribe_recording(self, recording_id: int):
+    """Celery 入口（保留备用；生产环境走 FastAPI BackgroundTasks）。"""
+    run_transcription(recording_id)

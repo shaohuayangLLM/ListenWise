@@ -10,13 +10,13 @@ import logging
 import re
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Recording, RecordingSource, RecordingStatus, SceneType
-from app.tasks.transcribe import transcribe_recording
+from app.tasks.transcribe import run_transcription
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,11 @@ async def _resolve_audio(url: str) -> tuple[str, str | None]:
 
 
 @router.post("", response_model=PodcastCreateResponse)
-async def create_podcast(body: PodcastCreate, db: AsyncSession = Depends(get_db)):
+async def create_podcast(
+    body: PodcastCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
     url = body.url.strip()
     if not url.startswith(("http://", "https://")):
         raise HTTPException(status_code=400, detail="请输入有效的链接（http/https）")
@@ -78,7 +82,7 @@ async def create_podcast(body: PodcastCreate, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(recording)
 
-    transcribe_recording.delay(recording.id)
+    background_tasks.add_task(run_transcription, recording.id)
     logger.info("Podcast %d created (audio=%s)", recording.id, audio_url)
     return PodcastCreateResponse(
         id=recording.id,

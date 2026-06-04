@@ -15,7 +15,9 @@ import {
 import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TranscriptPanel from "@/components/TranscriptPanel";
 import {
+  exportTranscript,
   getRecordingDetail,
+  mediaUrl,
   regenerateSummary,
   type RecordingDetail,
   type TranscriptSegment,
@@ -159,14 +161,20 @@ export default function RecordingDetailPage({
 
         <div className="flex items-center gap-2 shrink-0">
           {EXPORT_FORMATS.map((item) => (
-            <a
+            <button
               key={item.format}
-              href={`/api/recordings/${recording.id}/export?format=${item.format}`}
+              onClick={() =>
+                exportTranscript(
+                  recording.id,
+                  item.format,
+                  `${recording.title}.${item.format}`
+                )
+              }
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-medium text-text-dim hover:border-accent hover:text-accent transition-colors"
             >
               <Download size={13} />
               {item.label}
-            </a>
+            </button>
           ))}
         </div>
       </div>
@@ -175,7 +183,7 @@ export default function RecordingDetailPage({
       {recording.file_url && (
         <AudioPlayer
           ref={playerRef}
-          fileUrl={recording.file_url.replace(/^\/app\/uploads\//, "/uploads/")}
+          fileUrl={mediaUrl(recording.file_url)}
           onTimeUpdate={setCurrentTime}
         />
       )}

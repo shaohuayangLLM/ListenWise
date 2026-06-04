@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import AppSidebar from "@/components/AppSidebar";
 import Navbar from "@/components/Navbar";
+import PasscodeGate from "@/components/PasscodeGate";
 
 export const metadata: Metadata = {
   title: "ListenWise - 音频转写工具",
@@ -17,15 +18,17 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased">
-        <Navbar />
-        <div className="flex min-h-[calc(100vh-72px)]">
-          <Suspense fallback={null}>
-            <AppSidebar />
-          </Suspense>
-          <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
-            {children}
-          </main>
-        </div>
+        <PasscodeGate>
+          <Navbar />
+          <div className="flex min-h-[calc(100vh-72px)]">
+            <Suspense fallback={null}>
+              <AppSidebar />
+            </Suspense>
+            <main className="min-w-0 flex-1 px-4 py-5 md:px-8 md:py-8">
+              {children}
+            </main>
+          </div>
+        </PasscodeGate>
       </body>
     </html>
   );

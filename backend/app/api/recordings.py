@@ -3,7 +3,15 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +40,7 @@ router = APIRouter(prefix="/api/recordings", tags=["recordings"])
 
 @router.post("/upload", response_model=RecordingUploadResponse)
 async def upload_recording(
+    background_tasks: BackgroundTasks,
     file: UploadFile,
     title: str = Form(...),
     note: str | None = Form(None),
@@ -83,9 +92,9 @@ async def upload_recording(
     await db.commit()
     await db.refresh(recording)
 
-    # Trigger Celery transcription task
-    from app.tasks.transcribe import transcribe_recording
-    transcribe_recording.delay(recording.id)
+    # Trigger transcription in-process (FastAPI background task; no Celery/Redis needed)
+    from app.tasks.transcribe import run_transcription
+    background_tasks.add_task(run_transcription, recording.id)
 
     return RecordingUploadResponse(
         id=recording.id,

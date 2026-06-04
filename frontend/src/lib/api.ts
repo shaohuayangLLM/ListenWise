@@ -1,12 +1,40 @@
 import axios from "axios";
 
+// 生产：直连 Render 后端（绕开 Vercel 代理的 body 大小限制）。
+// 本地：留空走 /api，由 Next rewrites 代理到本地后端。
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "/api";
+export const PASSCODE_KEY = "lw_passcode";
+
+// 媒体（音频）地址：播客是 http 外链直接用；本地上传文件拼到后端 /uploads。
+const MEDIA_BASE = API_BASE.replace(/\/api$/, "");
+export function mediaUrl(fileUrl: string): string {
+  if (/^https?:\/\//.test(fileUrl)) return fileUrl;
+  return MEDIA_BASE + fileUrl.replace(/^\/app\/uploads\//, "/uploads/");
+}
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: API_BASE,
 });
 
-// 大文件上传绕过 Next dev 代理的 10MB body 限制：设置后直连后端。
-// 仅 dev 用；生产同域或反代时留空走 /api。
-const UPLOAD_BASE = process.env.NEXT_PUBLIC_UPLOAD_BASE || "";
+// 请求自动带上访问口令；响应 401 时清除口令并回到口令门。
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const pc = localStorage.getItem(PASSCODE_KEY);
+    if (pc) config.headers["X-Access-Passcode"] = pc;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (resp) => resp,
+  (error) => {
+    if (error?.response?.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem(PASSCODE_KEY);
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface UploadRecordingParams {
   file: File;
@@ -56,8 +84,8 @@ export async function uploadRecording({
   formData.append("title", title);
   if (note) formData.append("note", note);
 
-  const { data } = await (UPLOAD_BASE ? axios : api).post<UploadResponse>(
-    UPLOAD_BASE ? `${UPLOAD_BASE}/api/recordings/upload` : "/recordings/upload",
+  const { data } = await api.post<UploadResponse>(
+    "/recordings/upload",
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
@@ -86,6 +114,25 @@ export async function updateRecording(
 
 export async function deleteRecording(id: number): Promise<void> {
   await api.delete(`/recordings/${id}`);
+}
+
+export async function exportTranscript(
+  id: number,
+  format: string,
+  filename: string
+): Promise<void> {
+  const resp = await api.get(`/recordings/${id}/export`, {
+    params: { format },
+    responseType: "blob",
+  });
+  const url = URL.createObjectURL(resp.data as Blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export interface CreatePodcastParams {

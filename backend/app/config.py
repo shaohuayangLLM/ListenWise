@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     # 空则回退到不加密的 .env 配置（开发态）；生产必须设置
     app_secret_key: str = ""
 
+    # 访问口令（受控 Demo）：非空时，所有 /api 业务接口需带 X-Access-Passcode 头
+    # 空则不鉴权（本地开发）
+    access_passcode: str = ""
+
+    # CORS 允许来源（逗号分隔）；生产填 Vercel 前端域名
+    cors_origins: str = "http://localhost:3000"
+
     # Upload 限制
     max_file_size_mb: int = 500          # 音频文件上限
     max_video_size_mb: int = 6144        # 视频文件上限（6GB）

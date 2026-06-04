@@ -1,24 +1,29 @@
-# ListenWise 后端 — 阶段① 跨境验证最小部署
+# ListenWise 后端 — 完整部署（阶段②）
 #
-# 用途：部署到 Render（Singapore），实测海外服务器调用国内阿里云 Fun-ASR
-#       的延迟与成功率，决定后端是否能落在海外（go/no-go）。
-# 阶段① 只需 web 服务，不需要 Redis / Celery / 数据库。
-#
-# 在 Render 用「Blueprint」方式导入本仓库即可自动按此创建服务。
+# 受控 Demo：FastAPI 同进程后台任务跑转写（无需 Celery/Redis），
+# 访问口令保护，连 Supabase Postgres，调阿里云 Fun-ASR + qwen。
+# 在 Render 用「Blueprint」导入本仓库即可按此创建。
 services:
   - type: web
     name: listenwise-api
     runtime: python
     rootDir: backend
-    region: singapore       # 离中国最近，跨境延迟相对最低
-    plan: free              # 免费实例会休眠，首次访问需冷启动
+    region: singapore         # 跨境验证已确认可调通国内阿里云
+    plan: free                # 免费实例会休眠，首次访问冷启动
     buildCommand: pip install -e .
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # 启动时先跑数据库迁移，再起服务
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
-      - key: DASHSCOPE_API_KEY   # 你的百炼 key（Fun-ASR + qwen 共用）
-        sync: false              # 不写进仓库，部署时在 Render 控制台填
+      - key: DATABASE_URL          # Supabase 连接串，需用 asyncpg 驱动
+        sync: false                # 形如 postgresql+asyncpg://postgres:<pwd>@<host>:5432/postgres
+      - key: DASHSCOPE_API_KEY     # 百炼 key（Fun-ASR + qwen 共用）
+        sync: false
       - key: ASR_PROVIDER
         value: fun_asr
-      - key: DIAG_TOKEN          # 自定义一个口令，调诊断端点时用 header 带上
+      - key: APP_SECRET_KEY        # Fernet 主密钥，Render 自动生成随机值
+        generateValue: true
+      - key: ACCESS_PASSCODE       # 访问口令（受控 Demo）；发给受邀用户
+        sync: false
+      - key: CORS_ORIGINS          # Vercel 前端域名，如 https://listenwise.vercel.app
         sync: false
