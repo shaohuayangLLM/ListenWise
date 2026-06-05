@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListenWise · 转写详情 · 声东击西 #390</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --surface:#f6f5f4;
+    --text:rgba(0,0,0,0.95);
+    --text-2:#615d59;
+    --text-3:#a39e98;
+    --accent:#0075de;
+    --accent-active:#005bab;
+    --border:rgba(0,0,0,0.1);
+    --spk-a:#0075de;   /* 徐涛 */
+    --spk-b:#615d59;   /* 达巍 */
+    --radius-btn:4px;
+    --radius-card:12px;
+    --radius-feat:16px;
+    --radius-pill:9999px;
+    --shadow:rgba(0,0,0,0.04) 0 4px 18px, rgba(0,0,0,0.027) 0 2px 8px, rgba(0,0,0,0.02) 0 1px 3px;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:16px}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Inter",-apple-system,system-ui,"PingFang SC","Hiragino Sans GB",sans-serif;
+    font-feature-settings:"tnum";
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-wrap:pretty;
+  }
+  .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+
+  /* ---------- Header ---------- */
+  header.page{padding:40px 0 22px}
+  .back{
+    display:inline-flex;align-items:center;gap:6px;
+    color:var(--text-2);font-size:13px;font-weight:500;
+    text-decoration:none;padding:5px 10px;border-radius:var(--radius-btn);
+    transition:background .15s ease,color .15s ease;margin-left:-10px;margin-bottom:18px;
+  }
+  .back:hover{background:var(--surface);color:var(--text)}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:40px}
+  h1.title{
+    font-size:30px;line-height:1.28;font-weight:700;letter-spacing:-0.015em;
+    max-width:780px;
+  }
+  .meta{
+    margin-top:14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+    font-size:13px;color:var(--text-2);
+  }
+  .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--text-3)}
+  .meta .src{color:var(--text);font-weight:600}
+
+  .exports{display:flex;gap:8px;flex-shrink:0;padding-top:2px}
+  .exp-btn{
+    font-size:12.5px;font-weight:500;color:var(--text-2);
+    background:var(--bg);border:1px solid var(--border);
+    border-radius:var(--radius-btn);padding:7px 12px;cursor:pointer;
+    transition:background .15s ease,border-color .15s ease,color .15s ease;
+    font-family:inherit;letter-spacing:.01em;
+  }
+  .exp-btn:hover{background:var(--surface);color:var(--text);border-color:rgba(0,0,0,0.16)}
+
+  /* ---------- Player bar ---------- */
+  .player{
+    position:sticky;top:0;z-index:30;
+    background:rgba(255,255,255,0.86);
+    backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--border);
+  }
+  .player-inner{
+    max-width:1180px;margin:0 auto;padding:12px 32px;
+    display:flex;align-items:center;gap:18px;
+  }
+  .play{
+    width:38px;height:38px;flex-shrink:0;border-radius:50%;
+    background:var(--accent);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease,transform .12s ease;
+  }
+  .play:hover{background:var(--accent-active)}
+  .play:active{transform:scale(.94)}
+  .play::before{
+    content:"";display:block;
+    border-left:11px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent;
+    margin-left:3px;
+  }
+  .progress-wrap{flex:1;display:flex;align-items:center;gap:14px}
+  .track{
+    position:relative;flex:1;height:5px;border-radius:var(--radius-pill);
+    background:rgba(0,0,0,0.08);cursor:pointer;
+  }
+  .fill{
+    position:absolute;left:0;top:0;bottom:0;width:40%;
+    background:var(--accent);border-radius:var(--radius-pill);
+  }
+  .knob{
+    position:absolute;top:50%;left:40%;transform:translate(-50%,-50%);
+    width:13px;height:13px;border-radius:50%;background:#fff;
+    border:1.5px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.18);
+  }
+  .time{font-size:13px;color:var(--text-2);white-space:nowrap}
+  .time b{color:var(--text);font-weight:600}
+  .speed{
+    font-size:12.5px;font-weight:600;color:var(--text-2);
+    border:1px solid var(--border);border-radius:var(--radius-btn);
+    padding:5px 10px;background:var(--bg);cursor:pointer;white-space:nowrap;
+    transition:background .15s ease;
+  }
+  .speed:hover{background:var(--surface)}
+
+  /* ---------- Speaker legend ---------- */
+  .legend{display:flex;align-items:center;gap:14px;padding:22px 0 6px}
+  .legend-label{font-size:13px;color:var(--text-2);font-weight:500}
+  .chip{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-pill);padding:5px 13px 5px 11px;font-size:13px;
+  }
+  .chip .pt{width:9px;height:9px;border-radius:50%}
+  .chip .nm{font-weight:600;color:var(--text)}
+  .chip .seg{color:var(--text-3);font-size:12px}
+
+  /* ---------- Two-column ---------- */
+  .grid{
+    display:grid;grid-template-columns:420px 1fr;gap:28px;
+    padding:26px 0 80px;align-items:start;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow);
+  }
+  .card-head{
+    padding:20px 24px 14px;border-bottom:1px solid var(--border);
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  }
+  .card-head h2{font-size:15px;font-weight:700;letter-spacing:-0.01em}
+  .tag-gen{
+    font-size:11.5px;color:var(--text-3);font-weight:500;
+    background:var(--bg);border:1px solid var(--border);
+    border-radius:var(--radius-pill);padding:3px 9px;white-space:nowrap;
+  }
+  .count{font-size:12px;color:var(--text-3);font-weight:500;white-space:nowrap}
+
+  /* left summary sticky */
+  .col-left{position:sticky;top:74px}
+
+  .tldr{
+    padding:18px 24px 20px;font-size:14px;color:var(--text);line-height:1.72;
+    border-bottom:1px solid var(--border);
+  }
+  .tldr .lab{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;
+    color:var(--accent);margin-bottom:8px;text-transform:uppercase;
+  }
+
+  /* timeline */
+  .timeline{padding:8px 0 10px}
+  .tl-item{
+    position:relative;display:grid;grid-template-columns:54px 1fr;gap:12px;
+    padding:11px 24px 11px 20px;cursor:pointer;
+    transition:background .14s ease;
+  }
+  .tl-item:hover{background:var(--bg)}
+  .tl-time{
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    font-size:12px;color:var(--text-2);font-weight:600;padding-top:1px;
+    transition:color .14s ease;
+  }
+  .tl-item:hover .tl-time{color:var(--accent)}
+  .tl-node{position:relative}
+  .tl-node::before{
+    content:"";position:absolute;left:-15px;top:6px;
+    width:8px;height:8px;border-radius:50%;
+    background:var(--bg);border:1.5px solid var(--text-3);
+    transition:border-color .14s ease,background .14s ease;z-index:2;
+  }
+  .tl-item:hover .tl-node::before{border-color:var(--accent);background:var(--accent)}
+  /* connector line */
+  .tl-item::after{
+    content:"";position:absolute;left:50px;top:18px;bottom:-11px;
+    width:1.5px;background:var(--border);z-index:1;
+  }
+  .tl-item:last-child::after{display:none}
+  .tl-h{font-size:13px;font-weight:600;color:var(--text);line-height:1.45}
+  .tl-pts{margin:5px 0 0;padding:0;list-style:none}
+  .tl-pts li{
+    position:relative;font-size:12.5px;color:var(--text-2);line-height:1.55;
+    padding-left:12px;margin-top:2px;
+  }
+  .tl-pts li::before{
+    content:"";position:absolute;left:1px;top:8px;
+    width:3px;height:3px;border-radius:50%;background:var(--text-3);
+  }
+
+  /* right transcript */
+  .transcript{padding:6px 0 12px}
+  .seg{
+    display:grid;grid-template-columns:56px 1fr;gap:16px;
+    padding:13px 26px;border-bottom:1px solid rgba(0,0,0,0.05);
+    transition:background .14s ease;
+  }
+  .seg:last-child{border-bottom:none}
+  .seg:hover{background:var(--bg)}
+  .seg-ts{
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    font-size:12px;color:var(--text-3);font-weight:600;padding-top:3px;
+  }
+  .seg-body{}
+  .seg-spk{font-size:12.5px;font-weight:700;margin-bottom:3px;letter-spacing:.01em}
+  .spk-a{color:var(--spk-a)}
+  .spk-b{color:var(--spk-b)}
+  .seg-txt{font-size:14px;color:var(--text);line-height:1.7}
+
+  .seg.now{background:var(--bg)}
+  .seg.now{
+    box-shadow:inset 3px 0 0 var(--accent);
+    border-radius:0 var(--radius-btn) var(--radius-btn) 0;
+  }
+  .seg.now .seg-ts{color:var(--accent)}
+  .now-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--accent);
+    background:rgba(0,117,222,0.08);border-radius:var(--radius-pill);
+    padding:2px 8px;margin-left:8px;vertical-align:middle;text-transform:uppercase;
+  }
+  .now-badge .pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--accent);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- Player bar (sticky) -->
+<div class="player">
+  <div class="player-inner">
+    <button class="play" aria-label="播放"></button>
+    <div class="progress-wrap">
+      <div class="track"><div class="fill"></div><div class="knob"></div></div>
+      <div class="time"><b class="tnum">24:30</b> <span class="tnum">/ 61:24</span></div>
+    </div>
+    <button class="speed tnum">1.0×</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- Header -->
+  <header class="page">
+    <a href="#" class="back">← 返回</a>
+    <div class="head-row">
+      <div>
+        <h1 class="title">#390 从「关税战」到接受「战略稳定」，特朗普变了吗？</h1>
+        <div class="meta">
+          <span class="src">小宇宙</span><span class="dot"></span>
+          <span>声东击西</span><span class="dot"></span>
+          <span class="tnum">时长 61:24</span><span class="dot"></span>
+          <span>识别到 2 位说话人</span>
+        </div>
+      </div>
+      <div class="exports">
+        <button class="exp-btn">Markdown</button>
+        <button class="exp-btn">TXT</button>
+        <button class="exp-btn">SRT</button>
+        <button class="exp-btn">VTT</button>
+      </div>
+    </div>
+
+    <!-- Speaker legend -->
+    <div class="legend">
+      <span class="legend-label">识别到 2 位说话人</span>
+      <span class="chip">
+        <span class="pt" style="background:var(--spk-a)"></span>
+        <span class="nm">徐涛</span><span class="seg tnum">38 段</span>
+      </span>
+      <span class="chip">
+        <span class="pt" style="background:var(--spk-b)"></span>
+        <span class="nm">达巍</span><span class="seg tnum">121 段</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Two columns -->
+  <div class="grid">
+
+    <!-- LEFT: AI summary -->
+    <aside class="col-left">
+      <div class="card">
+        <div class="card-head">
+          <h2>AI 摘要</h2>
+          <span class="tag-gen">由 qwen-plus 生成</span>
+        </div>
+
+        <div class="tldr">
+          <span class="lab">TL;DR</span>
+          本期《声东击西》聚焦特朗普访华国事访问。达巍教授从国际关系学者视角指出：此次访问的核心成果，是中美共同确立「建设性战略稳定」的关系定位，标志着双方在结构性矛盾背景下，首次就关系性质达成高层共识；元首外交在其中发挥了不可替代的自上而下管理作用。
+        </div>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-time tnum">00:00</div>
+            <div class="tl-node">
+              <div class="tl-h">开场与嘉宾介绍</div>
+              <ul class="tl-pts"><li>主播介绍本期主题与嘉宾达巍教授</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">00:30</div>
+            <div class="tl-node">
+              <div class="tl-h">两场国事访问的背景与公众关注</div>
+              <ul class="tl-pts"><li>特朗普访华引发广泛讨论</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">01:54</div>
+            <div class="tl-node">
+              <div class="tl-h">元首外交的必要性：自上而下的关系管理</div>
+              <ul class="tl-pts"><li>大国关系中元首外交不可替代</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">06:08</div>
+            <div class="tl-node">
+              <div class="tl-h">国事访问的层级与政治分量</div>
+              <ul class="tl-pts"><li>国事访问规格最高、象征意义重大</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">10:40</div>
+            <div class="tl-node">
+              <div class="tl-h">核心成果：共建「建设性战略稳定」关系</div>
+              <ul class="tl-pts">
+                <li>成立中美贸易与投资委员会</li>
+                <li>首次就关系性质达成高层共识</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">13:47</div>
+            <div class="tl-node">
+              <div class="tl-h">访问筹备的现实制约与美方准备不足</div>
+              <ul class="tl-pts"><li>筹备时间紧、美方团队准备有限</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">16:54</div>
+            <div class="tl-node">
+              <div class="tl-h">评估标准与初步成效：关系稳定与机制建设</div>
+              <ul class="tl-pts"><li>以关系是否企稳、机制是否建立为标尺</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">28:31</div>
+            <div class="tl-node">
+              <div class="tl-h">西方媒体误读：过度交易化 vs 战略稳定性</div>
+              <ul class="tl-pts"><li>媒体过度强调交易、忽视战略稳定意图</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">34:49</div>
+            <div class="tl-node">
+              <div class="tl-h">特朗普对华态度的延续性与团队变化</div>
+              <ul class="tl-pts"><li>第二任期话语权增强、政策更反映个人认知</li></ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">45:43</div>
+            <div class="tl-node">
+              <div class="tl-h">关税与技术管制：有限软化与长期趋严</div>
+              <ul class="tl-pts">
+                <li>关税或达协议、技术出口管制松动极有限</li>
+                <li>美方暂缓 140 亿美元对台军售</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">52:54</div>
+            <div class="tl-node">
+              <div class="tl-h">中俄美三边格局与中国的外交主动性</div>
+              <ul class="tl-pts">
+                <li>普京访华属年度互访机制</li>
+                <li>中国多线外交展现战略自主</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-time tnum">58:36</div>
+            <div class="tl-node">
+              <div class="tl-h">台湾问题：立场重申与微妙信号</div>
+              <ul class="tl-pts"><li>双方各自重申立场、出现值得关注的微妙变化</li></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: transcript -->
+    <main>
+      <div class="card">
+        <div class="card-head">
+          <h2>转录文本</h2>
+          <span class="count tnum">共 23,444 字</span>
+        </div>
+        <div class="transcript">
+
+          <div class="seg">
+            <div class="seg-ts tnum">00:00</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-a">徐涛</div>
+              <div class="seg-txt">欢迎收听这一期的《声东击西》，我是徐涛。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">00:18</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-a">徐涛</div>
+              <div class="seg-txt">最近最受关注的国际新闻，无疑是特朗普的访华行程。今天我们请到国际关系学院的达巍教授，一起来聊聊。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">00:34</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">谢谢徐涛，很高兴回到节目。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">01:54</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">元首外交在中美这样的大国关系里，作用是不可替代的，它是一种自上而下的关系管理。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">06:08</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">国事访问是规格最高的一种，光是这个层级本身，就传递了很强的政治信号。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">10:40</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">这次最实质的成果，是双方确立了「建设性战略稳定」这个定位，还成立了贸易和投资两个委员会。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">16:54</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-a">徐涛</div>
+              <div class="seg-txt">那我们普通人，怎么判断这次访问到底算不算成功？</div>
+            </div>
+          </div>
+
+          <div class="seg now">
+            <div class="seg-ts tnum">24:18</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍<span class="now-badge"><span class="pulse"></span>正在播放</span></div>
+              <div class="seg-txt">我的标尺很简单，就是看两件事：关系有没有企稳，机制有没有建立起来。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">28:31</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">西方媒体有个普遍的误读，就是把它过度「交易化」了，只盯着买了多少大豆。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">34:49</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">特朗普第二任期，他个人的话语权是更强了，所以政策更多反映的是他自己的认知。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">45:43</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">关税上可能会有协议，但技术出口管制的松动会非常有限，这是结构性的。</div>
+            </div>
+          </div>
+
+          <div class="seg">
+            <div class="seg-ts tnum">58:36</div>
+            <div class="seg-body">
+              <div class="seg-spk spk-b">达巍</div>
+              <div class="seg-txt">台湾问题上，双方还是各自重申了立场，但有一些微妙的信号，值得我们继续观察。</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListenWise · 转写详情页 · 5 套视觉风格</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+    color:#141413;-webkit-font-smoothing:antialiased;padding:56px 48px 72px;letter-spacing:-0.01em;}
+  h1{font-size:26px;font-weight:600;margin-bottom:6px;color:#141413;}
+  .lead{font-size:14.5px;color:#5e5d59;margin-bottom:8px;line-height:1.6;max-width:820px;}
+  .lead b{color:#141413;}
+  .note{font-size:13px;color:#87867f;margin-bottom:40px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px;max-width:1280px;}
+  .card{text-decoration:none;color:inherit;border-radius:18px;overflow:hidden;background:#ffffff;
+    border:1px solid #e8e6dc;box-shadow:0 1px 2px rgba(20,20,19,0.04);transition:transform .2s cubic-bezier(.16,1,.3,1),box-shadow .2s,border-color .2s;}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(20,20,19,0.12);border-color:#c96442;}
+  .swatch{height:104px;display:flex;align-items:flex-end;padding:14px 18px;position:relative;border-bottom:1px solid #f0eee6;}
+  .swatch .dots{display:flex;gap:7px;}
+  .swatch .dots i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,0.10);}
+  .swatch .no{position:absolute;top:14px;right:16px;font-size:13px;font-weight:600;color:rgba(0,0,0,0.32);}
+  .swatch .src{position:absolute;top:14px;left:18px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(0,0,0,0.30);}
+  .body{padding:18px 20px 22px;}
+  .nm{font-size:18px;font-weight:600;margin-bottom:5px;color:#141413;}
+  .dna{font-size:13px;color:#5e5d59;line-height:1.65;margin-bottom:13px;}
+  .pal{font-size:11.5px;color:#87867f;font-feature-settings:"tnum";}
+  .go{margin-top:13px;font-size:13px;color:#5e5d59;font-weight:500;display:inline-flex;align-items:center;gap:6px;}
+  .card:hover .go{color:#c96442;}
+  .soon{opacity:.62;}
+  .soon .go{color:#a39e98;}
+</style>
+</head>
+<body>
+  <h1>ListenWise · 转写详情页 · 5 套视觉风格</h1>
+  <div class="lead">同一个<b>转写详情页</b>界面（音频条 + AI 摘要章节时间线 + 逐字稿），套 5 套从 <b>design-md</b> 真实设计系统提取 token 的皮肤。从「ToB 优雅浅色」到「深色科技」，跨视觉 DNA 对比，挑一个定方向。</div>
+  <div class="note">统一内容：小宇宙《声东击西》#390「从关税战到接受战略稳定」转写详情 · 桌面端 1180px · 点卡片看完整界面</div>
+
+  <div class="grid">
+    <a class="card" href="方案1-stripe.html">
+      <div class="swatch" style="background:linear-gradient(120deg,#F5F3FF,#FFFFFF);">
+        <span class="src">Stripe</span><span class="no">01</span>
+        <div class="dots"><i style="background:#FFFFFF;"></i><i style="background:#EEF2F9;"></i><i style="background:#533AFD;"></i><i style="background:#061B31;"></i></div>
+      </div>
+      <div class="body">
+        <div class="nm">优雅蓝紫 · ToB</div>
+        <div class="dna">纯白底 + 墨蓝字 + Stripe 紫强调 + 蓝调多层阴影。金融级精致，企业 dashboard 的可信气质，最贴近现有听悟蓝基因的升级版。</div>
+        <div class="pal">底 #FFFFFF · 墨 #061B31 · 强调 #533AFD</div>
+        <div class="go">查看方案 →</div>
+      </div>
+    </a>
+
+    <a class="card" href="方案2-notion.html">
+      <div class="swatch" style="background:linear-gradient(120deg,#F6F5F4,#FFFFFF);">
+        <span class="src">Notion</span><span class="no">02</span>
+        <div class="dots"><i style="background:#FFFFFF;"></i><i style="background:#F6F5F4;"></i><i style="background:#0075DE;"></i><i style="background:#1A1A1A;"></i></div>
+      </div>
+      <div class="body">
+        <div class="nm">暖白笔记 · 阅读友好</div>
+        <div class="dna">暖白卡片 + 近黑字 + Notion 蓝 + whisper 细边框。内容笔记气质，把逐字稿当文档读，留白舒展、低视觉噪音。</div>
+        <div class="pal">底 #FFFFFF · 暖面 #F6F5F4 · 蓝 #0075DE</div>
+        <div class="go">查看方案 →</div>
+      </div>
+    </a>
+
+    <a class="card" href="方案3-claude.html">
+      <div class="swatch" style="background:linear-gradient(120deg,#F5F4ED,#FAF9F5);">
+        <span class="src">Claude</span><span class="no">03</span>
+        <div class="dots"><i style="background:#FAF9F5;"></i><i style="background:#F0EEE6;"></i><i style="background:#C96442;"></i><i style="background:#141413;"></i></div>
+      </div>
+      <div class="body">
+        <div class="nm">文学沙龙 · 衬线暖调</div>
+        <div class="dna">羊皮纸底 + 衬线标题 + 陶土橙强调 + 环形 ring 阴影。Anthropic 的编辑气质，温润有文化厚度，差异化最强的人文方向。</div>
+        <div class="pal">纸 #F5F4ED · 墨 #141413 · 陶土 #C96442</div>
+        <div class="go">查看方案 →</div>
+      </div>
+    </a>
+
+    <a class="card" href="方案4-elevenlabs.html">
+      <div class="swatch" style="background:linear-gradient(120deg,#FAFAFA,#FFFFFF);">
+        <span class="src">ElevenLabs</span><span class="no">04</span>
+        <div class="dots"><i style="background:#FFFFFF;"></i><i style="background:#F5F5F5;"></i><i style="background:#000000;"></i><i style="background:#777169;"></i></div>
+      </div>
+      <div class="body">
+        <div class="nm">音频留白 · 细体显示字</div>
+        <div class="dna">近白底 + 纯黑 + 极细 display 标题 + 暖石 CTA + 多层细微阴影。AI 音频产品原生美学，ethereal、克制、高级感，同领域参照。</div>
+        <div class="pal">底 #FFFFFF · 黑 #000000 · 暖石 #F5F2EF</div>
+        <div class="go">查看方案 →</div>
+      </div>
+    </a>
+
+    <a class="card" href="方案5-linear.html">
+      <div class="swatch" style="background:linear-gradient(120deg,#191A1B,#08090A);">
+        <span class="src" style="color:rgba(255,255,255,0.40);">Linear</span><span class="no" style="color:rgba(255,255,255,0.40);">05</span>
+        <div class="dots"><i style="background:#08090A;border-color:rgba(255,255,255,0.12);"></i><i style="background:#191A1B;border-color:rgba(255,255,255,0.12);"></i><i style="background:#5E6AD2;"></i><i style="background:#F7F8F8;"></i></div>
+      </div>
+      <div class="body">
+        <div class="nm">深色科技 · 亮度分层</div>
+        <div class="dna">近黑底 + 靛蓝强调 + 半透白边框 + 亮度阶梯（不靠颜色靠明度分层）。极简克制的开发者审美，最激进的深色方向，专业冷峻。</div>
+        <div class="pal">底 #08090A · 字 #F7F8F8 · 靛 #5E6AD2</div>
+        <div class="go">查看方案 →</div>
+      </div>
+    </a>
+  </div>
+</body>
+</html>
