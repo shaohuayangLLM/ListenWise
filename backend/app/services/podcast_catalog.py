@@ -260,6 +260,16 @@ async def _discover_feed(title: str, author: str | None) -> str | None:
     return exact[0]["feedUrl"]
 
 
+def _feed_platform(feed_url: str) -> tuple[str, int]:
+    """按 feed 域名判断平台与排序优先级（越小越靠前）：小宇宙 > Apple/其他 > 喜马拉雅。"""
+    f = (feed_url or "").lower()
+    if "xyzfm.space" in f or "xiaoyuzhoufm" in f or "xyzcdn" in f:
+        return ("小宇宙", 0)
+    if "ximalaya" in f:
+        return ("喜马拉雅", 2)
+    return ("Apple Podcasts", 1)
+
+
 async def search_podcast_shows(term: str, *, limit: int = 12) -> list[PodcastSearchResult]:
     keyword = term.strip()
     if not keyword:
@@ -288,13 +298,14 @@ async def search_podcast_shows(term: str, *, limit: int = 12) -> list[PodcastSea
 
     results: list[PodcastSearchResult] = []
     seen_feeds: set[str] = set()
-    for country, response in zip(countries, responses, strict=True):
+    for response in responses:
         for item in response.json().get("results", []):
             feed_url = (item.get("feedUrl") or "").strip()
             title = item.get("collectionName") or item.get("trackName")
             if not feed_url or not title or feed_url in seen_feeds:
                 continue
             seen_feeds.add(feed_url)
+            platform, _ = _feed_platform(feed_url)
             results.append(
                 PodcastSearchResult(
                     source_type="podcast",
@@ -305,12 +316,12 @@ async def search_podcast_shows(term: str, *, limit: int = 12) -> list[PodcastSea
                     feed_url=feed_url,
                     source_url=item.get("collectionViewUrl") or item.get("trackViewUrl"),
                     episode_count=item.get("trackCount"),
-                    source_label=f"Apple Podcasts · {country}",
+                    source_label=platform,
                 )
             )
-            if len(results) >= limit:
-                return results
-    return results
+    # 以小宇宙为主：小宇宙 > Apple/其他 > 喜马拉雅
+    results.sort(key=lambda r: _feed_platform(r.feed_url or "")[1])
+    return results[:limit]
 
 
 async def search_youtube_videos(

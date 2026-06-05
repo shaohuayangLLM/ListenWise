@@ -438,10 +438,20 @@ function SearchResultLink({ result }: { result: PodcastSearchResult }) {
         <div className="mt-3 line-clamp-2 text-[12px] leading-5 text-text-muted">
           {result.description || "暂无简介"}
         </div>
-        <div className="mt-2 text-[12px] text-text-muted">
-          {result.source_label || "Podcast"}
-          {result.episode_count ? ` · ${result.episode_count} 集` : ""}
-          {result.published_at ? ` · ${formatDate(result.published_at)}` : ""}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-text-muted">
+          <span
+            className={
+              result.source_label === "小宇宙"
+                ? "rounded bg-accent-glow px-1.5 py-0.5 text-[11px] font-medium text-accent"
+                : "rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-dim"
+            }
+          >
+            {result.source_label || "Podcast"}
+          </span>
+          {result.episode_count ? <span>· {result.episode_count} 集</span> : null}
+          {result.published_at ? (
+            <span>· {formatDate(result.published_at)}</span>
+          ) : null}
         </div>
       </div>
     </>

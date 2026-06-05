@@ -6,14 +6,18 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
+  Check,
   ExternalLink,
+  FileText,
   Loader2,
   Plus,
   Rss,
 } from "lucide-react";
 import {
+  importPodcastEpisode,
   previewPodcastShow,
   subscribePodcastShow,
+  transcribePodcastEpisode,
   type PodcastPreview,
   type PodcastPreviewEpisode,
 } from "@/lib/api";
@@ -214,44 +218,93 @@ function PreviewContent() {
 }
 
 function PreviewEpisodeRow({ episode }: { episode: PodcastPreviewEpisode }) {
-  const content = (
-    <>
+  const [working, setWorking] = useState(false);
+  const [status, setStatus] = useState<"idle" | "done" | "error">("idle");
+
+  const getTranscript = async () => {
+    if (!episode.episode_url || working) return;
+    if (
+      !window.confirm(
+        `获取「${episode.title}」的文字稿？无需订阅整个节目，这会导入这一集并调用 ASR 转写。`
+      )
+    )
+      return;
+    setWorking(true);
+    setStatus("idle");
+    try {
+      const imported = await importPodcastEpisode(
+        episode.episode_url,
+        episode.title
+      );
+      await transcribePodcastEpisode(imported.id);
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  return (
+    <div className="grid items-center gap-3 border-b border-border px-5 py-4 last:border-0 md:grid-cols-[1fr_152px]">
       <div className="min-w-0">
-        <div className="truncate text-[14px] font-medium text-text">
-          {episode.title}
-        </div>
+        {episode.episode_url ? (
+          <a
+            href={episode.episode_url}
+            target="_blank"
+            rel="noreferrer"
+            className="block truncate text-[14px] font-medium text-text transition-colors hover:text-accent"
+          >
+            {episode.title}
+          </a>
+        ) : (
+          <div className="truncate text-[14px] font-medium text-text">
+            {episode.title}
+          </div>
+        )}
         {episode.shownotes_text && (
           <div className="mt-1 line-clamp-2 text-[12px] leading-5 text-text-muted">
             {episode.shownotes_text}
           </div>
         )}
+        <div className="mt-1.5 text-[11px] tabular-nums text-text-muted">
+          {formatDate(episode.published_at)} ·{" "}
+          {formatDuration(episode.duration)}
+        </div>
       </div>
-      <div className="text-[12px] text-text-dim">
-        {formatDate(episode.published_at)}
-      </div>
-      <div className="text-[12px] text-text-dim">
-        {formatDuration(episode.duration)}
-      </div>
-    </>
-  );
 
-  if (!episode.episode_url) {
-    return (
-      <div className="grid gap-2 border-b border-border px-5 py-4 last:border-0 md:grid-cols-[1fr_150px_120px]">
-        {content}
-      </div>
-    );
-  }
-
-  return (
-    <a
-      href={episode.episode_url}
-      target="_blank"
-      rel="noreferrer"
-      className="grid gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 hover:bg-surface-2 md:grid-cols-[1fr_150px_120px]"
-    >
-      {content}
-    </a>
+      {episode.episode_url ? (
+        <button
+          onClick={getTranscript}
+          disabled={working || status === "done"}
+          title={
+            status === "done"
+              ? "已提交，转写完成后在「我的记录」查看"
+              : undefined
+          }
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent-glow px-3.5 text-[12.5px] font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent hover:text-white disabled:opacity-50 disabled:hover:bg-accent-glow disabled:hover:text-accent md:justify-self-end"
+        >
+          {working ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : status === "done" ? (
+            <Check size={14} />
+          ) : (
+            <FileText size={14} />
+          )}
+          {working
+            ? "获取中"
+            : status === "done"
+              ? "已提交"
+              : status === "error"
+                ? "重试"
+                : "获取文字稿"}
+        </button>
+      ) : (
+        <span className="text-[12px] text-text-muted md:justify-self-end">
+          无音频
+        </span>
+      )}
+    </div>
   );
 }
 

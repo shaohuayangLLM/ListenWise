@@ -43,7 +43,7 @@ export default function PodcastEpisodePage({
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [activeTab, setActiveTab] = useState<"transcript" | "shownotes">(
-    "transcript"
+    "shownotes"
   );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -200,8 +200,8 @@ export default function PodcastEpisodePage({
       <section className="rounded-xl border border-border bg-surface shadow-ring shadow-soft">
         <div className="flex border-b border-border px-6">
           {[
-            ["transcript", "文字稿"],
             ["shownotes", "Shownotes"],
+            ["transcript", "文字稿"],
           ].map(([key, label]) => (
             <button
               key={key}

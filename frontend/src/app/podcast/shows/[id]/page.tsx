@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckSquare,
+  FileText,
   Loader2,
   RefreshCw,
   Rss,
@@ -20,6 +21,7 @@ import {
   getPodcastShow,
   loadMorePodcastEpisodes,
   refreshPodcastShow,
+  transcribePodcastEpisode,
   unsubscribePodcastShow,
   type PodcastEpisode,
   type PodcastShow,
@@ -61,6 +63,7 @@ export default function PodcastShowPage({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [transcribingId, setTranscribingId] = useState<number | null>(null);
 
   const reload = useCallback(async () => {
     const [showData, episodeData] = await Promise.all([
@@ -112,6 +115,21 @@ export default function PodcastShowPage({
       return;
     await deletePodcastShow(showId);
     router.push("/podcast");
+  };
+
+  const handleTranscribeEpisode = async (episodeId: number) => {
+    setTranscribingId(episodeId);
+    setError(null);
+    setMessage(null);
+    try {
+      await transcribePodcastEpisode(episodeId);
+      setMessage("已开始获取文字稿，转写完成后可在单集详情或「我的记录」查看");
+      await reload();
+    } catch {
+      setError("获取文字稿失败，请确认音频地址或稍后重试");
+    } finally {
+      setTranscribingId(null);
+    }
   };
 
   const eligibleEpisodes = episodes.filter(
@@ -372,9 +390,36 @@ export default function PodcastShowPage({
               <Link
                 key={episode.id}
                 href={`/podcast/episodes/${episode.id}`}
-                className="grid gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 hover:bg-surface-2 md:grid-cols-[1fr_150px_130px]"
+                className="grid items-center gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 hover:bg-surface-2 md:grid-cols-[1fr_140px_128px]"
               >
-                {content}
+                <div className="truncate text-[14px] font-medium text-text">
+                  {episode.title}
+                </div>
+                <div className="text-[12px] text-text-dim">
+                  {formatDate(episode.published_at)}
+                </div>
+                {eligible ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTranscribeEpisode(episode.id);
+                    }}
+                    disabled={transcribingId !== null}
+                    className="inline-flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg border border-accent bg-accent-glow px-3 text-[12px] font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent hover:text-white disabled:opacity-40"
+                  >
+                    {transcribingId === episode.id ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <FileText size={13} />
+                    )}
+                    {transcribingId === episode.id ? "获取中" : "获取文字稿"}
+                  </button>
+                ) : (
+                  <div className="justify-self-end text-[12px] font-medium text-accent">
+                    {statusLabel(episode.recording_status)}
+                  </div>
+                )}
               </Link>
             );
           })
