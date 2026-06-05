@@ -100,13 +100,13 @@ function PreviewContent() {
     <div className="mx-auto max-w-[1040px] space-y-6">
       <Link
         href="/podcast"
-        className="inline-flex items-center gap-2 text-[13px] text-text-dim hover:text-accent"
+        className="inline-flex items-center gap-2 text-[13px] text-text-dim transition-colors duration-200 hover:text-accent"
       >
         <ArrowLeft size={16} />
         返回播客
       </Link>
 
-      <section className="rounded-lg border border-border bg-white p-6">
+      <section className="rounded-xl border border-border bg-surface p-6 shadow-ring shadow-soft">
         <div className="flex flex-wrap items-start gap-5">
           {show.cover_url ? (
             <Image
@@ -125,15 +125,15 @@ function PreviewContent() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-[24px] font-bold text-text">{show.title}</h1>
-                <p className="mt-1 text-[13px] text-text-dim">
+                <h1 className="font-serif text-[26px] font-semibold tracking-[-0.01em] text-text">{show.title}</h1>
+                <p className="mt-1.5 text-[13px] text-text-dim">
                   {show.author || "作者未知"} · {show.total_available} 集
                 </p>
               </div>
               {show.subscribed_show_id ? (
                 <Link
                   href={`/podcast/shows/${show.subscribed_show_id}`}
-                  className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[13px] font-medium text-text-dim hover:border-accent hover:text-accent"
+                  className="inline-flex h-9 items-center rounded-lg border border-border px-3.5 text-[13px] font-medium text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:border-accent hover:text-accent"
                 >
                   已订阅，查看详情
                 </Link>
@@ -141,7 +141,7 @@ function PreviewContent() {
                 <button
                   onClick={subscribe}
                   disabled={subscribing}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white disabled:opacity-50"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {subscribing ? (
                     <Loader2 size={15} className="animate-spin" />
@@ -190,14 +190,14 @@ function PreviewContent() {
       </section>
 
       {error && (
-        <div className="rounded-lg border border-[#FFD6D9] bg-[#FFF4F5] px-4 py-3 text-[13px] text-[#C83B48]">
+        <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-[13px] text-danger">
           {error}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-lg border border-border bg-white">
-        <div className="border-b border-border px-5 py-3">
-          <h2 className="text-[16px] font-semibold">最近单集</h2>
+      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-ring shadow-soft">
+        <div className="border-b border-border px-5 py-3.5">
+          <h2 className="font-serif text-[17px] font-semibold tracking-[-0.005em]">最近单集</h2>
         </div>
         {preview.episodes.length === 0 ? (
           <div className="py-20 text-center text-[14px] text-text-muted">
@@ -248,7 +248,7 @@ function PreviewEpisodeRow({ episode }: { episode: PodcastPreviewEpisode }) {
       href={episode.episode_url}
       target="_blank"
       rel="noreferrer"
-      className="grid gap-2 border-b border-border px-5 py-4 last:border-0 hover:bg-surface md:grid-cols-[1fr_150px_120px]"
+      className="grid gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 hover:bg-surface-2 md:grid-cols-[1fr_150px_120px]"
     >
       {content}
     </a>

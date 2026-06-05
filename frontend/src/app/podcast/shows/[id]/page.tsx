@@ -198,13 +198,13 @@ export default function PodcastShowPage({
     <div className="mx-auto max-w-[1040px] space-y-6">
       <Link
         href="/podcast"
-        className="inline-flex items-center gap-2 text-[13px] text-text-dim hover:text-accent"
+        className="inline-flex items-center gap-2 text-[13px] text-text-dim transition-colors duration-200 hover:text-accent"
       >
         <ArrowLeft size={16} />
         返回播客
       </Link>
 
-      <section className="rounded-lg border border-border bg-white p-6">
+      <section className="rounded-xl border border-border bg-surface p-6 shadow-ring shadow-soft">
         <div className="flex flex-wrap items-start gap-5">
           {show.cover_url ? (
             <Image
@@ -223,8 +223,8 @@ export default function PodcastShowPage({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-[24px] font-bold text-text">{show.title}</h1>
-                <p className="mt-1 text-[13px] text-text-dim">
+                <h1 className="font-serif text-[26px] font-semibold tracking-[-0.01em] text-text">{show.title}</h1>
+                <p className="mt-1.5 text-[13px] text-text-dim">
                   {show.author || "作者未知"} · {show.episode_count} 集 ·{" "}
                   {show.transcript_count} 篇文字稿
                 </p>
@@ -233,7 +233,7 @@ export default function PodcastShowPage({
                 <button
                   onClick={() => run("refresh")}
                   disabled={working !== null}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white disabled:opacity-50"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   <RefreshCw
                     size={15}
@@ -244,14 +244,14 @@ export default function PodcastShowPage({
                 {show.is_subscribed && (
                   <button
                     onClick={unsubscribe}
-                    className="h-9 rounded-lg border border-border px-3.5 text-[13px] text-text-dim hover:text-text"
+                    className="h-9 rounded-lg border border-border px-3.5 text-[13px] text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:text-accent"
                   >
                     取消订阅
                   </button>
                 )}
                 <button
                   onClick={deleteShow}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-dim hover:border-[#FFB7BD] hover:text-[#C83B48]"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-danger/40 hover:text-danger"
                   aria-label="删除节目"
                 >
                   <Trash2 size={15} />
@@ -276,17 +276,17 @@ export default function PodcastShowPage({
         <div
           className={`rounded-lg border px-4 py-3 text-[13px] ${
             error
-              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
-              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+              ? "border-danger/30 bg-danger/10 text-danger"
+              : "border-success/30 bg-success/10 text-success"
           }`}
         >
           {error || message}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-lg border border-border bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
-          <h2 className="text-[16px] font-semibold">单集</h2>
+      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-ring shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+          <h2 className="font-serif text-[17px] font-semibold tracking-[-0.005em]">单集</h2>
           {selecting ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[12px] text-text-dim">
@@ -295,14 +295,14 @@ export default function PodcastShowPage({
               <button
                 onClick={selectEligible}
                 disabled={eligibleEpisodes.length === 0 || working !== null}
-                className="h-9 rounded-lg border border-border px-3 text-[13px] text-text-dim hover:border-accent hover:text-accent disabled:opacity-40"
+                className="h-9 rounded-lg border border-border px-3 text-[13px] text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:text-accent disabled:opacity-40"
               >
                 全选可获取
               </button>
               <button
                 onClick={() => cancelSelection()}
                 disabled={working !== null}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-dim hover:text-text disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-border-hover hover:text-text disabled:opacity-40"
                 aria-label="取消批量选择"
               >
                 <X size={15} />
@@ -310,7 +310,7 @@ export default function PodcastShowPage({
               <button
                 onClick={batchTranscribe}
                 disabled={selectedIds.size === 0 || working !== null}
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-white transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover disabled:opacity-40 disabled:hover:translate-y-0"
               >
                 {working === "batch" && (
                   <Loader2 size={14} className="animate-spin" />
@@ -322,7 +322,7 @@ export default function PodcastShowPage({
             <button
               onClick={() => setSelecting(true)}
               disabled={eligibleEpisodes.length === 0 || working !== null}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[13px] text-text-dim hover:border-accent hover:text-accent disabled:opacity-40"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3.5 text-[13px] text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:text-accent disabled:opacity-40"
             >
               <CheckSquare size={15} />
               批量获取文字稿
@@ -355,8 +355,8 @@ export default function PodcastShowPage({
             return selecting ? (
               <label
                 key={episode.id}
-                className={`grid gap-2 border-b border-border px-5 py-4 last:border-0 md:grid-cols-[28px_1fr_150px_130px] ${
-                  eligible ? "cursor-pointer hover:bg-surface" : "opacity-50"
+                className={`grid gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 md:grid-cols-[28px_1fr_150px_130px] ${
+                  eligible ? "cursor-pointer hover:bg-surface-2" : "opacity-50"
                 }`}
               >
                 <input
@@ -372,7 +372,7 @@ export default function PodcastShowPage({
               <Link
                 key={episode.id}
                 href={`/podcast/episodes/${episode.id}`}
-                className="grid gap-2 border-b border-border px-5 py-4 last:border-0 hover:bg-surface md:grid-cols-[1fr_150px_130px]"
+                className="grid gap-2 border-b border-border px-5 py-4 transition-colors duration-200 last:border-0 hover:bg-surface-2 md:grid-cols-[1fr_150px_130px]"
               >
                 {content}
               </Link>
@@ -383,7 +383,7 @@ export default function PodcastShowPage({
           <button
             onClick={() => run("more")}
             disabled={working !== null || show.source_limited}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-4 text-[13px] text-text-dim hover:border-accent hover:text-accent disabled:opacity-40"
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-4 text-[13px] text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:text-accent disabled:opacity-40"
           >
             {working === "more" && <Loader2 size={14} className="animate-spin" />}
             加载更多

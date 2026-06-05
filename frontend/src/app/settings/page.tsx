@@ -114,8 +114,8 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[760px]">
-      <h1 className="text-[26px] font-extrabold tracking-tight">模型设置</h1>
-      <p className="mb-7 mt-1.5 text-[14px] text-text-dim">
+      <h1 className="font-serif text-[30px] font-semibold tracking-tight">模型设置</h1>
+      <p className="mb-9 mt-2.5 text-[14px] leading-relaxed text-text-dim">
         按能力分别配置公有云 API。密钥仅用于你的转写与总结请求，加密存储、不外传。
       </p>
 
@@ -128,12 +128,12 @@ export default function SettingsPage() {
         return (
           <div
             key={cap}
-            className="mb-5 rounded-[14px] border border-border bg-white p-6"
+            className="mb-6 rounded-xl border border-border bg-surface p-7 shadow-ring shadow-soft transition-shadow duration-300 [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:border-border-hover hover:shadow-[0_8px_28px_rgba(20,20,19,0.08)]"
           >
             <div className="flex items-center gap-3">
               <div>
-                <div className="text-[17px] font-bold">{meta.title}</div>
-                <div className="text-[12.5px] text-text-muted">{meta.desc}</div>
+                <div className="font-serif text-[19px] font-semibold">{meta.title}</div>
+                <div className="mt-0.5 text-[12.5px] text-text-muted">{meta.desc}</div>
               </div>
               <div className="ml-auto flex items-center text-[12px] font-semibold text-text-dim">
                 <span
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                   <select
                     value={d.provider}
                     onChange={(e) => setDraft(cap, { provider: e.target.value })}
-                    className="h-[42px] rounded-[9px] border border-border px-3 text-[14px] outline-none focus:border-accent"
+                    className="h-[44px] rounded-lg border border-border bg-surface px-3 text-[14px] outline-none transition-colors duration-200 hover:border-border-hover focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-glow)]"
                   >
                     {meta.providers.map((p) => (
                       <option key={p.v} value={p.v}>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
                   <input
                     value={d.model}
                     onChange={(e) => setDraft(cap, { model: e.target.value })}
-                    className="h-[42px] rounded-[9px] border border-border px-3.5 text-[14px] outline-none focus:border-accent"
+                    className="h-[44px] rounded-lg border border-border bg-surface px-3.5 text-[14px] outline-none transition-colors duration-200 hover:border-border-hover focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-glow)]"
                   />
                 </label>
               </div>
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                   placeholder={
                     cfg?.configured ? cfg.api_key_masked : "填写你的服务密钥"
                   }
-                  className="h-[42px] rounded-[9px] border border-border px-3.5 text-[14px] outline-none focus:border-accent"
+                  className="h-[44px] rounded-lg border border-border bg-surface px-3.5 text-[14px] outline-none transition-colors duration-200 hover:border-border-hover focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-glow)]"
                 />
                 <span className="text-[11.5px] text-text-muted">
                   {cfg?.configured
@@ -189,10 +189,10 @@ export default function SettingsPage() {
             <div className="mt-5 flex items-center gap-3 border-t border-border pt-4">
               {res && (
                 <span
-                  className={`rounded-[7px] px-2.5 py-1 text-[12.5px] font-semibold ${
+                  className={`rounded-lg px-2.5 py-1 text-[12.5px] font-semibold ${
                     res.ok
-                      ? "bg-[#E8FCF0] text-success"
-                      : "bg-[#FFEEEF] text-[#FF4754]"
+                      ? "bg-accent-glow text-success"
+                      : "bg-[rgba(181,81,63,0.10)] text-danger"
                   }`}
                 >
                   {res.message}
@@ -202,14 +202,14 @@ export default function SettingsPage() {
               <button
                 onClick={() => test(cap)}
                 disabled={testing === cap}
-                className="inline-flex h-9 items-center rounded-[9px] border border-border-hover bg-white px-3.5 text-[13px] font-medium transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                className="inline-flex h-9 items-center rounded-lg border border-border bg-surface px-4 text-[13px] font-medium transition-all duration-300 [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:-translate-y-px hover:border-accent hover:text-accent disabled:translate-y-0 disabled:opacity-50"
               >
                 {testing === cap ? "测试中…" : "测试连接"}
               </button>
               <button
                 onClick={() => save(cap)}
                 disabled={saving === cap}
-                className="inline-flex h-9 items-center rounded-[9px] bg-accent px-3.5 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-9 items-center rounded-lg bg-accent px-4 text-[13px] font-medium text-white transition-all duration-300 [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:-translate-y-px hover:bg-accent-hover disabled:translate-y-0 disabled:opacity-50"
               >
                 {saving === cap ? "保存中…" : "保存"}
               </button>

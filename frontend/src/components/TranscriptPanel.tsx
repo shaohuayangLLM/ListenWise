@@ -6,9 +6,9 @@ import type { TranscriptSegment } from "@/lib/api";
 
 const SPEAKER_COLORS: Record<string, string> = {
   A: "var(--accent)",
-  B: "var(--accent-2)",
-  C: "var(--accent-3)",
-  D: "var(--warning)",
+  B: "var(--text-muted)",
+  C: "var(--accent-2)",
+  D: "var(--accent-hover)",
 };
 
 function getSpeakerColor(speaker: string): string {
@@ -50,9 +50,9 @@ export default function TranscriptPanel({
 
   if (segments.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl overflow-hidden h-full flex flex-col">
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-base font-semibold">转录文本</h2>
+      <div className="bg-surface rounded-xl shadow-ring shadow-soft overflow-hidden h-full flex flex-col">
+        <div className="px-6 py-5 border-b border-surface-2 flex items-center justify-between">
+          <h2 className="font-serif text-lg font-semibold tracking-tight">转录文本</h2>
         </div>
         <div className="flex-1 flex items-center justify-center text-text-muted text-sm p-8">
           暂无转录数据，等待处理完成
@@ -62,17 +62,17 @@ export default function TranscriptPanel({
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden h-full flex flex-col">
+    <div className="bg-surface rounded-xl shadow-ring shadow-soft overflow-hidden h-full flex flex-col">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
-        <h2 className="text-base font-semibold">转录文本</h2>
-        <span className="text-xs text-text-muted">
+      <div className="px-6 py-5 border-b border-surface-2 flex items-baseline gap-2.5 shrink-0">
+        <h2 className="font-serif text-lg font-semibold tracking-tight">转录文本</h2>
+        <span className="text-xs text-text-muted font-mono tabular-nums px-2 py-0.5 rounded bg-bg shadow-ring">
           共 {wordCount.toLocaleString()} 字
         </span>
       </div>
 
       {/* Segments */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div className="flex-1 overflow-y-auto p-4 space-y-0.5">
         {segments.map((seg, i) => {
           const isActive = currentTime >= seg.start && currentTime < seg.end;
           return (
@@ -81,22 +81,37 @@ export default function TranscriptPanel({
               ref={isActive ? activeRef : undefined}
               onClick={() => onSeek(seg.start)}
               className={clsx(
-                "flex gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all text-sm",
+                "flex gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] text-sm",
                 isActive
-                  ? "bg-accent-glow border border-[rgba(108,92,231,0.2)]"
-                  : "hover:bg-surface-2"
+                  ? "bg-surface shadow-[0_0_0_1px_var(--accent)]"
+                  : "hover:bg-bg"
               )}
             >
-              <span className="text-xs text-text-muted font-mono w-10 shrink-0 pt-0.5">
+              <span
+                className={clsx(
+                  "text-xs font-mono tabular-nums w-12 shrink-0 pt-1 transition-colors",
+                  isActive ? "text-accent font-semibold" : "text-text-muted"
+                )}
+              >
                 {formatTimestamp(seg.start)}
               </span>
-              <span
-                className="text-xs font-medium w-16 shrink-0 pt-0.5"
-                style={{ color: getSpeakerColor(seg.speaker) }}
-              >
-                {speakerLabels[seg.speaker] || seg.speaker}
-              </span>
-              <span className="flex-1 leading-relaxed">{seg.text}</span>
+              <div className="min-w-0 flex-1">
+                <div
+                  className="text-[0.84rem] font-semibold mb-1 flex items-center gap-2"
+                  style={{ color: getSpeakerColor(seg.speaker) }}
+                >
+                  {speakerLabels[seg.speaker] || seg.speaker}
+                  {isActive && (
+                    <span className="inline-flex items-center gap-1.5 text-[0.62rem] font-mono uppercase tracking-wider text-accent">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                      正在播放
+                    </span>
+                  )}
+                </div>
+                <p className="font-serif text-[0.97rem] leading-[1.74] text-text">
+                  {seg.text}
+                </p>
+              </div>
             </div>
           );
         })}

@@ -83,7 +83,7 @@ export default function FileUploader({ file, onFileChange }: FileUploaderProps) 
 
   if (file) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5 flex items-center gap-4">
+      <div className="bg-surface border border-border rounded-xl p-5 flex items-center gap-4 shadow-ring shadow-soft">
         <div className="w-12 h-12 rounded-lg bg-accent-glow flex items-center justify-center shrink-0">
           <FileAudio size={22} className="text-accent" />
         </div>
@@ -106,17 +106,23 @@ export default function FileUploader({ file, onFileChange }: FileUploaderProps) 
     <div>
       <div
         className={clsx(
-          "border-2 border-dashed rounded-xl py-14 px-8 text-center cursor-pointer transition-all",
+          "border-2 border-dashed rounded-xl py-14 px-8 text-center cursor-pointer transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)]",
           isDragging
-            ? "border-accent bg-accent-glow"
-            : "border-border hover:border-accent hover:bg-[rgba(108,92,231,0.05)]"
+            ? "border-accent bg-accent-glow -translate-y-0.5 shadow-[0_0_0_1px_var(--accent)]"
+            : "border-border bg-surface hover:border-accent hover:bg-accent-glow"
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => inputRef.current?.click()}
       >
-        <Upload size={40} className="mx-auto mb-4 text-text-muted opacity-70" />
+        <Upload
+          size={40}
+          className={clsx(
+            "mx-auto mb-4 transition-colors duration-300",
+            isDragging ? "text-accent" : "text-text-muted opacity-70"
+          )}
+        />
         <p className="text-base font-medium mb-2">
           拖拽文件到此处，或点击选择文件
         </p>
@@ -132,7 +138,7 @@ export default function FileUploader({ file, onFileChange }: FileUploaderProps) 
         />
       </div>
       {error && (
-        <p className="mt-3 text-sm text-[var(--accent-3)] font-medium">{error}</p>
+        <p className="mt-3 text-sm text-danger font-medium">{error}</p>
       )}
     </div>
   );

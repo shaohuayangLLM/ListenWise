@@ -1,24 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f5f6fa;
-  --surface: #ffffff;
-  --surface-2: #f0f1f5;
-  --surface-3: #e8e9f0;
-  --border: #e0e2eb;
-  --border-hover: #c8cbda;
-  --text: #1a1d2e;
-  --text-dim: #6b7094;
-  --text-muted: #9a9db8;
-  --accent: #1e64ff;
-  --accent-glow: rgba(30, 100, 255, 0.12);
-  --accent-hover: #3473ff;
-  --purple: #7c5cfc;
-  --accent-2: #00a8a3;
-  --accent-3: #e84393;
-  --success: #13c25f;
-  --warning: #ff8c42;
-  --danger: #e5484d;
+  /* ===== Claude 文学沙龙：羊皮纸暖底 + 陶土橙强调 ===== */
+  --bg: #f5f4ed;              /* 羊皮纸背景 */
+  --surface: #faf9f5;         /* 象牙卡片 */
+  --surface-2: #f0eee6;       /* 暖灰阶（border-soft 同色，浅） */
+  --surface-3: #e8e6dc;       /* 暖灰阶（深一档） */
+  --border: #e8e6dc;          /* 边框 */
+  --border-hover: #ddd9cc;    /* 边框 hover 略深 */
+  --text: #141413;            /* 主文字（墨） */
+  --text-dim: #5e5d59;        /* 次文字 */
+  --text-muted: #87867f;      /* 弱化文字 */
+  --accent: #c96442;          /* 陶土橙（主强调） */
+  --accent-glow: rgba(201, 100, 66, 0.10);  /* 暖色低透明光晕 */
+  --accent-hover: #d97757;    /* 珊瑚（hover 提亮） */
+  --purple: #d97757;          /* 暖化：原紫色统一回退到珊瑚 */
+  --accent-2: #b08968;        /* 暖棕（替代青色辅助色） */
+  --accent-3: #c96442;        /* 暖化：原品红回退到陶土 */
+  --success: #5b8c6e;         /* 暖橄榄绿（柔和不刺眼） */
+  --warning: #c98a42;         /* 暖琥珀 */
+  --danger: #b5513f;          /* 暖砖红 */
+
+  /* ===== 字体 ===== */
+  --font-serif: 'Anthropic Serif', Georgia, 'Songti SC', serif;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+
+  /* ===== 圆角 ===== */
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-hero: 32px;
+
+  /* ===== 阴影（Claude ring 风格，少用重投影） ===== */
+  --shadow-ring: 0 0 0 1px rgba(20, 20, 19, 0.06);
+  --shadow-soft: rgba(20, 20, 19, 0.05) 0 4px 24px;
 }
 
 @theme inline {
@@ -40,18 +55,34 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+
+  --radius-DEFAULT: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-hero: var(--radius-hero);
+
+  --shadow-ring: var(--shadow-ring);
+  --shadow-soft: var(--shadow-soft);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Noto Sans SC', system-ui, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
 }
 
-/* ===== 首页 hero 声纹装饰动画 ===== */
+/* 衬线标题：组件层用 font-serif token class，或加 .font-serif */
+.font-serif { font-family: var(--font-serif); }
+
+/* ===== 首页 hero 声纹装饰动画（陶土暖色，克制） ===== */
 @keyframes node-twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.7); }
-  50% { opacity: 0.95; transform: scale(1.1); }
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.08); }
 }
 .sp-node {
   transform-origin: center;

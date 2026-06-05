@@ -67,14 +67,16 @@ export default function PasscodeGate({
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-[380px] rounded-2xl border border-border bg-white p-8 shadow-sm"
+        className="w-full max-w-[380px] rounded-xl border border-border bg-surface p-8 shadow-ring shadow-soft"
       >
-        <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-glow">
+        <div className="mb-7 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-accent-glow">
             <Lock size={24} className="text-accent" />
           </div>
-          <h1 className="text-xl font-bold text-text">ListenWise</h1>
-          <p className="mt-1.5 text-[13px] text-text-dim">
+          <h1 className="font-serif text-[1.6rem] font-semibold tracking-[-0.01em] text-text">
+            ListenWise
+          </h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-text-dim">
             这是一个受邀体验的 Demo，请输入访问口令
           </p>
         </div>
@@ -85,7 +87,7 @@ export default function PasscodeGate({
           autoFocus
           onChange={(e) => setValue(e.target.value)}
           placeholder="访问口令"
-          className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm focus:border-accent focus:outline-none"
+          className="w-full rounded-lg border border-border bg-bg px-4 py-3 text-sm text-text outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted hover:border-border-hover focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-glow)]"
         />
         {error && (
           <p className="mt-2 text-[13px] font-medium text-danger">{error}</p>
@@ -94,7 +96,7 @@ export default function PasscodeGate({
         <button
           type="submit"
           disabled={checking || !value.trim()}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-semibold text-white shadow-ring transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-accent"
         >
           {checking ? <Loader2 size={16} className="animate-spin" /> : null}
           进入

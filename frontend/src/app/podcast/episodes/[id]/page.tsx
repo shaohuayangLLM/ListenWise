@@ -120,19 +120,19 @@ export default function PodcastEpisodePage({
     <div className="mx-auto max-w-[960px] space-y-6">
       <Link
         href={episode.show_id ? `/podcast/shows/${episode.show_id}` : "/podcast"}
-        className="inline-flex items-center gap-2 text-[13px] text-text-dim hover:text-accent"
+        className="inline-flex items-center gap-2 text-[13px] text-text-dim transition-colors duration-200 hover:text-accent"
       >
         <ArrowLeft size={16} />
         返回播客
       </Link>
 
-      <section className="rounded-lg border border-border bg-white p-6">
+      <section className="rounded-xl border border-border bg-surface p-6 shadow-ring shadow-soft">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-medium text-accent">
               {episode.show_title || "手动导入单集"}
             </div>
-            <h1 className="mt-2 text-[25px] font-bold leading-9 text-text">
+            <h1 className="mt-2 font-serif text-[27px] font-semibold leading-[1.28] tracking-[-0.01em] text-text">
               {episode.title}
             </h1>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-text-dim">
@@ -143,7 +143,7 @@ export default function PodcastEpisodePage({
                   href={episode.episode_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 hover:text-accent"
+                  className="inline-flex items-center gap-1 transition-colors duration-200 hover:text-accent"
                 >
                   原始链接
                   <ExternalLink size={12} />
@@ -156,7 +156,7 @@ export default function PodcastEpisodePage({
               <button
                 onClick={subscribeSuggested}
                 disabled={working}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[13px] font-medium text-text-dim hover:border-accent hover:text-accent disabled:opacity-50"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-[13px] font-medium text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:text-accent disabled:opacity-50"
               >
                 <Rss size={15} />
                 订阅此节目
@@ -165,7 +165,7 @@ export default function PodcastEpisodePage({
             <button
               onClick={transcribe}
               disabled={!canTranscribe || working}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-[13px] font-medium text-white disabled:opacity-40"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-[13px] font-medium text-white transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover disabled:opacity-40 disabled:hover:translate-y-0"
             >
               {(working || isTranscribing) && (
                 <Loader2 size={15} className="animate-spin" />
@@ -189,15 +189,15 @@ export default function PodcastEpisodePage({
         <div
           className={`rounded-lg border px-4 py-3 text-[13px] ${
             error
-              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
-              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+              ? "border-danger/30 bg-danger/10 text-danger"
+              : "border-success/30 bg-success/10 text-success"
           }`}
         >
           {error || message}
         </div>
       )}
 
-      <section className="rounded-lg border border-border bg-white">
+      <section className="rounded-xl border border-border bg-surface shadow-ring shadow-soft">
         <div className="flex border-b border-border px-6">
           {[
             ["transcript", "文字稿"],
@@ -208,7 +208,7 @@ export default function PodcastEpisodePage({
               onClick={() =>
                 setActiveTab(key as "transcript" | "shownotes")
               }
-              className={`border-b-2 px-4 py-4 text-[14px] font-medium ${
+              className={`border-b-2 px-4 py-4 text-[14px] font-medium transition-colors duration-200 ${
                 activeTab === key
                   ? "border-accent text-accent"
                   : "border-transparent text-text-dim hover:text-text"
@@ -219,19 +219,19 @@ export default function PodcastEpisodePage({
           ))}
         </div>
         {activeTab === "shownotes" ? (
-          <div className="whitespace-pre-wrap px-6 py-5 text-[14px] leading-7 text-text-dim">
+          <div className="whitespace-pre-wrap px-6 py-6 font-serif text-[15px] leading-[1.74] text-text-dim">
             {episode.shownotes_text || episode.description || "暂无 shownotes"}
           </div>
         ) : episode.transcript ? (
-          <div className="space-y-4 px-6 py-5">
+          <div className="space-y-5 px-6 py-6">
             {episode.transcript.segments.map((segment, index) => (
-              <div key={`${segment.start}-${index}`} className="text-[14px] leading-7">
-                <span className="mr-3 font-medium text-accent">
+              <div key={`${segment.start}-${index}`} className="leading-[1.74]">
+                <span className="mr-3 text-[14px] font-semibold text-accent">
                   {episode.transcript?.speaker_labels?.[segment.speaker] ||
                     segment.speaker ||
                     "发言人"}
                 </span>
-                <span className="text-text">{segment.text}</span>
+                <span className="font-serif text-[15px] text-text">{segment.text}</span>
               </div>
             ))}
           </div>

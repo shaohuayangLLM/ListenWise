@@ -22,10 +22,10 @@ function formatDate(dateStr: string): string {
 }
 
 const STATUS_TAG: Record<string, { label: string; className: string }> = {
-  done: { label: "已完成", className: "bg-[#E8FCF0] text-[#0A9C4F]" },
-  transcribing: { label: "转写中", className: "bg-[#FFF4E8] text-warning" },
-  uploading: { label: "上传中", className: "bg-[#FFF4E8] text-warning" },
-  failed: { label: "失败", className: "bg-[#FFEEEF] text-[#FF4754]" },
+  done: { label: "已完成", className: "bg-[rgba(91,140,110,0.12)] text-success" },
+  transcribing: { label: "转写中", className: "bg-[rgba(201,138,66,0.12)] text-warning" },
+  uploading: { label: "上传中", className: "bg-[rgba(201,138,66,0.12)] text-warning" },
+  failed: { label: "失败", className: "bg-[rgba(181,81,63,0.12)] text-danger" },
 };
 
 /** 声纹波形装饰 —— 听悟风 hero 右侧视觉 */
@@ -40,25 +40,25 @@ function VoiceArt() {
       >
         <defs>
           <linearGradient id="vg1" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#1E64FF" stopOpacity="0" />
-            <stop offset="35%" stopColor="#5B8FFF" stopOpacity="0.65" />
-            <stop offset="70%" stopColor="#7C5CFC" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#A78BFF" stopOpacity="0" />
+            <stop offset="0%" stopColor="#c96442" stopOpacity="0" />
+            <stop offset="35%" stopColor="#d97757" stopOpacity="0.65" />
+            <stop offset="70%" stopColor="#c96442" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#d97757" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="vg2" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#5B8FFF" stopOpacity="0" />
-            <stop offset="50%" stopColor="#7C5CFC" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#A78BFF" stopOpacity="0" />
+            <stop offset="0%" stopColor="#d97757" stopOpacity="0" />
+            <stop offset="50%" stopColor="#c96442" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#d97757" stopOpacity="0" />
           </linearGradient>
           <radialGradient id="vdot1">
             <stop offset="0%" stopColor="#fff" stopOpacity="1" />
-            <stop offset="40%" stopColor="#5B8FFF" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#5B8FFF" stopOpacity="0" />
+            <stop offset="40%" stopColor="#d97757" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#d97757" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="vdot2">
             <stop offset="0%" stopColor="#fff" stopOpacity="1" />
-            <stop offset="40%" stopColor="#7C5CFC" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#7C5CFC" stopOpacity="0" />
+            <stop offset="40%" stopColor="#c96442" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#c96442" stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -99,7 +99,7 @@ function VoiceArt() {
         </path>
 
         {/* 散落音频条 */}
-        <g stroke="#7C5CFC" strokeWidth="1.8" strokeLinecap="round" opacity="0.5">
+        <g stroke="#d97757" strokeWidth="1.8" strokeLinecap="round" opacity="0.5">
           <line x1="85" y1="100" x2="85" y2="140" />
           <line x1="155" y1="92" x2="155" y2="148" />
           <line x1="235" y1="100" x2="235" y2="140" />
@@ -136,14 +136,14 @@ export default function HomePage() {
       {/* ===== HERO ===== */}
       <section className="fade-up grid items-center gap-8 py-2 md:grid-cols-[1.2fr_1fr] md:py-6">
         <div>
-          <h1 className="text-[40px] font-extrabold leading-[1.12] tracking-tight text-text md:text-[52px]">
+          <h1 className="font-serif text-[42px] font-semibold leading-[1.18] tracking-[-0.01em] text-text md:text-[54px]">
             让每一段
-            <em className="not-italic bg-[linear-gradient(135deg,#1E64FF_0%,#7C5CFC_100%)] bg-clip-text text-transparent">
+            <em className="not-italic bg-[linear-gradient(135deg,#c96442_0%,#d97757_100%)] bg-clip-text text-transparent">
               声音
             </em>
             ，<br className="hidden md:block" />落成文字
           </h1>
-          <p className="mt-5 max-w-[520px] text-[15px] font-medium leading-[1.65] text-text-dim">
+          <p className="mt-6 max-w-[520px] text-[15px] font-medium leading-[1.7] text-text-dim">
             上传音视频文件，或用浏览器直接录音，自动转写为逐字稿，
             支持导出 Markdown / TXT / SRT / VTT。
           </p>
@@ -153,24 +153,24 @@ export default function HomePage() {
 
       {/* ===== 3 张场景卡 ===== */}
       <section className="fade-up fade-up-1 grid gap-[18px] py-2 md:grid-cols-3">
-        {/* 卡 1：开启实时记录（紫） */}
+        {/* 卡 1：开启实时记录（陶土感） */}
         <Link
           href="/upload"
-          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-[20px] border border-[rgba(124,92,252,.18)] bg-[linear-gradient(160deg,#EDE7FB_0%,#E4DBF7_70%,#D9CCF5_100%)] p-7 transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(124,92,252,.18)]"
+          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-xl border border-border bg-[linear-gradient(160deg,#faf9f5_0%,#f4f1ea_70%,#ece8dd_100%)] p-7 shadow-ring shadow-soft transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-1 hover:border-[rgba(201,100,66,0.3)] hover:shadow-[0_10px_30px_rgba(20,20,19,0.08)]"
         >
-          <span className="absolute right-[18px] top-[18px] rounded-lg bg-[rgba(124,92,252,.55)] px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white backdrop-blur-sm">
+          <span className="absolute right-[18px] top-[18px] rounded-lg bg-accent px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white">
             会议神器
           </span>
-          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.65),transparent_70%)]" />
-          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(0,0,0,.08)]">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(201,100,66,0.12),transparent_70%)]" />
+          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(20,20,19,.06)]">
             <defs>
               <linearGradient id="rt-a" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#9D87FF" />
-                <stop offset="100%" stopColor="#6C65FF" />
+                <stop offset="0%" stopColor="#d97757" />
+                <stop offset="100%" stopColor="#c96442" />
               </linearGradient>
               <linearGradient id="rt-b" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#5B8FFF" />
-                <stop offset="100%" stopColor="#7C5CFC" />
+                <stop offset="0%" stopColor="#d97757" />
+                <stop offset="100%" stopColor="#c96442" />
               </linearGradient>
             </defs>
             {/* 聊天气泡主体 */}
@@ -187,7 +187,7 @@ export default function HomePage() {
             <circle cx="48" cy="46" r="12" fill="url(#rt-b)" />
             <circle cx="44" cy="42" r="3.5" fill="rgba(255,255,255,.5)" />
           </svg>
-          <div className="relative z-10 mb-2.5 text-[22px] font-bold tracking-tight text-text">
+          <div className="relative z-10 mb-2.5 font-serif text-[22px] font-semibold tracking-tight text-text">
             开启实时记录
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
@@ -196,35 +196,35 @@ export default function HomePage() {
           </div>
         </Link>
 
-        {/* 卡 2：上传音视频（青） */}
+        {/* 卡 2：上传音视频（象牙感，暖棕图标） */}
         <Link
           href="/upload"
-          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-[20px] border border-[rgba(19,181,181,.18)] bg-[linear-gradient(160deg,#DEF3F1_0%,#D2EEF4_70%,#C2E6F2_100%)] p-7 transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(19,181,181,.18)]"
+          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-xl border border-border bg-[linear-gradient(160deg,#faf9f5_0%,#f0eee6_70%,#e8e6dc_100%)] p-7 shadow-ring shadow-soft transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-1 hover:border-[rgba(201,100,66,0.3)] hover:shadow-[0_10px_30px_rgba(20,20,19,0.08)]"
         >
-          <span className="absolute right-[18px] top-[18px] rounded-lg bg-[rgba(19,170,170,.6)] px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white backdrop-blur-sm">
+          <span className="absolute right-[18px] top-[18px] rounded-lg bg-[#b08968] px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white">
             网课必备
           </span>
-          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.65),transparent_70%)]" />
-          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(0,0,0,.08)]">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(176,137,104,0.14),transparent_70%)]" />
+          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(20,20,19,.06)]">
             <defs>
               <linearGradient id="uv-a" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#3FC9C9" />
-                <stop offset="100%" stopColor="#13A8B5" />
+                <stop offset="0%" stopColor="#c2a07f" />
+                <stop offset="100%" stopColor="#b08968" />
               </linearGradient>
               <linearGradient id="uv-b" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#9FE6E6" />
-                <stop offset="100%" stopColor="#3FC9C9" />
+                <stop offset="0%" stopColor="#d6c2ac" />
+                <stop offset="100%" stopColor="#c2a07f" />
               </linearGradient>
             </defs>
             <path d="M10 18 L40 14 L52 22 L52 50 L10 50 Z" fill="url(#uv-b)" opacity="0.55" />
             <path d="M8 24 L38 20 L50 28 L50 56 L8 56 Z" fill="url(#uv-a)" />
             <path d="M38 20 L50 28 L38 32 Z" fill="rgba(255,255,255,.35)" />
             <circle cx="29" cy="42" r="12" fill="#fff" opacity="0.95" />
-            <polygon points="26,36 26,48 38,42" fill="#13A8B5" />
-            <circle cx="46" cy="14" r="9" fill="#fff" stroke="#13A8B5" strokeWidth="1.5" />
-            <path d="M46 18 L46 10 M42 14 L46 10 L50 14" stroke="#13A8B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <polygon points="26,36 26,48 38,42" fill="#b08968" />
+            <circle cx="46" cy="14" r="9" fill="#fff" stroke="#b08968" strokeWidth="1.5" />
+            <path d="M46 18 L46 10 M42 14 L46 10 L50 14" stroke="#b08968" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
-          <div className="relative z-10 mb-2.5 text-[22px] font-bold tracking-tight text-text">
+          <div className="relative z-10 mb-2.5 font-serif text-[22px] font-semibold tracking-tight text-text">
             上传音视频
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
@@ -233,24 +233,24 @@ export default function HomePage() {
           </div>
         </Link>
 
-        {/* 卡 3：播客（蓝） */}
+        {/* 卡 3：播客（暖灰感，陶土图标） */}
         <Link
           href="/podcast"
-          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-[20px] border border-[rgba(60,90,230,.18)] bg-[linear-gradient(160deg,#E7EBFE_0%,#DCE3FD_70%,#CBD6FB_100%)] p-7 transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(60,90,230,.18)]"
+          className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-xl border border-border bg-[linear-gradient(160deg,#f4f1ea_0%,#ece8dd_70%,#e3ddcf_100%)] p-7 shadow-ring shadow-soft transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-1 hover:border-[rgba(201,100,66,0.3)] hover:shadow-[0_10px_30px_rgba(20,20,19,0.08)]"
         >
-          <span className="absolute right-[18px] top-[18px] rounded-lg bg-[rgba(70,100,235,.55)] px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white backdrop-blur-sm">
+          <span className="absolute right-[18px] top-[18px] rounded-lg bg-accent px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white">
             AI看播客
           </span>
-          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.65),transparent_70%)]" />
-          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(0,0,0,.08)]">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-[120px] w-[120px] rounded-full bg-[radial-gradient(circle,rgba(201,100,66,0.12),transparent_70%)]" />
+          <svg viewBox="0 0 64 64" fill="none" className="relative z-10 mb-5 h-16 w-16 drop-shadow-[0_6px_12px_rgba(20,20,19,.06)]">
             <defs>
               <linearGradient id="pc-a" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#5B8FFF" />
-                <stop offset="100%" stopColor="#3C5AE6" />
+                <stop offset="0%" stopColor="#d97757" />
+                <stop offset="100%" stopColor="#c96442" />
               </linearGradient>
               <linearGradient id="pc-b" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#A2B6FF" />
-                <stop offset="100%" stopColor="#5B8FFF" />
+                <stop offset="0%" stopColor="#e3a98f" />
+                <stop offset="100%" stopColor="#d97757" />
               </linearGradient>
             </defs>
             {/* 浏览器窗口 */}
@@ -267,7 +267,7 @@ export default function HomePage() {
               <path d="M33 47 a5 5 0 0 1 -7 -7 l3 -3" />
             </g>
           </svg>
-          <div className="relative z-10 mb-2.5 text-[22px] font-bold tracking-tight text-text">
+          <div className="relative z-10 mb-2.5 font-serif text-[22px] font-semibold tracking-tight text-text">
             播客
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
@@ -280,7 +280,7 @@ export default function HomePage() {
       {/* ===== 最近转写 ===== */}
       <section className="fade-up fade-up-2 py-6">
         <div className="mb-4 flex items-baseline justify-between">
-          <span className="text-[15px] font-bold text-text">最近</span>
+          <span className="font-serif text-[18px] font-semibold text-text">最近</span>
           <Link
             href="/records"
             className="text-[12px] font-medium text-text-muted transition-colors hover:text-accent"
@@ -294,7 +294,7 @@ export default function HomePage() {
             <Loader2 size={24} className="animate-spin" />
           </div>
         ) : recent.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-border bg-white py-14 text-center text-[14px] text-text-muted">
+          <div className="rounded-xl border border-dashed border-border bg-surface py-14 text-center text-[14px] text-text-muted">
             还没有转写记录，从上面选一种方式开始吧
           </div>
         ) : (
@@ -305,7 +305,7 @@ export default function HomePage() {
                 <Link
                   key={r.id}
                   href={`/recordings/${r.id}`}
-                  className="flex min-h-[130px] flex-col rounded-[14px] border border-[#EBEDF0] bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[rgba(30,100,255,.3)] hover:shadow-[0_8px_20px_rgba(30,100,255,.08)]"
+                  className="flex min-h-[130px] flex-col rounded-lg border border-border bg-surface p-4 shadow-ring transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:border-[rgba(201,100,66,0.3)] hover:shadow-[0_8px_20px_rgba(20,20,19,0.07)]"
                 >
                   <div className="mb-2.5 flex items-start justify-between gap-2.5">
                     <div className="line-clamp-2 text-[13.5px] font-semibold leading-[1.4] text-text">

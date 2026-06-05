@@ -197,8 +197,8 @@ export default function WebRecorder({
         style={{
           height: `${8 + Math.sin((i / bars) * Math.PI) * 24}px`,
           backgroundColor: active
-            ? "var(--accent-3)"
-            : "var(--surface-2, #eee)",
+            ? "var(--accent)"
+            : "var(--surface-3, #e8e6dc)",
           opacity: active ? 0.6 + volumeLevel * 0.4 : 0.3,
         }}
       />
@@ -206,9 +206,9 @@ export default function WebRecorder({
   });
 
   return (
-    <div className="border border-border rounded-xl bg-surface p-6">
+    <div className="border border-border rounded-xl bg-surface p-6 shadow-ring shadow-soft">
       {error && (
-        <p className="text-sm text-[var(--accent-3)] font-medium mb-4">
+        <p className="text-sm text-danger font-medium mb-4">
           {error}
         </p>
       )}
@@ -224,7 +224,7 @@ export default function WebRecorder({
           {formatTime(duration)}
         </span>
         {state === "recording" && (
-          <span className="inline-block w-2 h-2 rounded-full bg-[var(--accent-3)] ml-3 animate-pulse" />
+          <span className="inline-block w-2 h-2 rounded-full bg-accent ml-3 animate-pulse" />
         )}
         {state === "paused" && (
           <span className="text-sm text-text-muted ml-3">已暂停</span>
@@ -237,7 +237,7 @@ export default function WebRecorder({
           <button
             type="button"
             onClick={startRecording}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--accent-3)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-medium text-sm shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent-hover hover:-translate-y-0.5"
           >
             <Mic size={18} />
             开始录音
@@ -249,7 +249,7 @@ export default function WebRecorder({
             <button
               type="button"
               onClick={pauseRecording}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-sm font-medium hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-sm font-medium transition-all duration-200 hover:border-accent hover:bg-accent-glow hover:text-accent"
             >
               <Pause size={16} />
               暂停
@@ -257,7 +257,7 @@ export default function WebRecorder({
             <button
               type="button"
               onClick={stopRecording}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent-hover hover:-translate-y-0.5"
             >
               <Square size={16} />
               完成录音
@@ -270,7 +270,7 @@ export default function WebRecorder({
             <button
               type="button"
               onClick={resumeRecording}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-sm font-medium hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-sm font-medium transition-all duration-200 hover:border-accent hover:bg-accent-glow hover:text-accent"
             >
               <Play size={16} />
               继续
@@ -278,7 +278,7 @@ export default function WebRecorder({
             <button
               type="button"
               onClick={stopRecording}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent-hover hover:-translate-y-0.5"
             >
               <Square size={16} />
               完成录音

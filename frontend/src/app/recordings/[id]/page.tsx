@@ -34,9 +34,9 @@ const EXPORT_FORMATS = [
 
 const SPEAKER_COLORS: Record<string, string> = {
   A: "var(--accent)",
-  B: "var(--accent-2)",
-  C: "var(--accent-3)",
-  D: "var(--warning)",
+  B: "var(--text-muted)",
+  C: "var(--accent-2)",
+  D: "var(--accent-hover)",
 };
 
 function speakerColor(s: string): string {
@@ -171,11 +171,11 @@ export default function RecordingDetailPage({
         <div className="flex items-center gap-4 min-w-0">
           <Link
             href="/"
-            className="p-2 rounded-lg hover:bg-surface-2 text-text-dim transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-2 text-text-dim hover:text-accent transition-colors"
           >
             <ArrowLeft size={20} />
           </Link>
-          <h1 className="text-xl font-bold truncate">{recording.title}</h1>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight truncate">{recording.title}</h1>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -189,7 +189,7 @@ export default function RecordingDetailPage({
                   `${recording.title}.${item.format}`
                 )
               }
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-medium text-text-dim hover:border-accent hover:text-accent transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface shadow-ring text-xs font-mono text-text-dim hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)] transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)]"
             >
               <Download size={13} />
               {item.label}
@@ -205,7 +205,7 @@ export default function RecordingDetailPage({
                 : "转写完成后可导出到 Obsidian"
             }
             aria-label="导出到 Obsidian"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:text-text-dim"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-surface shadow-ring text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-dim disabled:hover:shadow-ring"
           >
             <FileDown size={14} />
           </button>
@@ -215,10 +215,10 @@ export default function RecordingDetailPage({
       {(exportMessage || exportError) && (
         <div
           className={clsx(
-            "mb-4 rounded-lg border px-4 py-3 text-[13px]",
+            "mb-4 rounded-lg px-4 py-3 text-[13px] shadow-ring",
             exportError
-              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
-              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+              ? "bg-surface text-danger"
+              : "bg-surface text-success"
           )}
         >
           {exportError || exportMessage}
@@ -244,14 +244,14 @@ export default function RecordingDetailPage({
           {speakers.map((sp) => (
             <span
               key={sp.speaker}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-surface text-xs"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface shadow-ring text-xs"
             >
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: speakerColor(sp.speaker) }}
               />
               <span className="font-medium">{sp.name}</span>
-              <span className="text-text-muted">{sp.segments} 段</span>
+              <span className="text-text-muted font-mono tabular-nums">{sp.segments} 段</span>
             </span>
           ))}
         </div>
@@ -259,20 +259,20 @@ export default function RecordingDetailPage({
 
       {/* AI 摘要（播客自动生成 / 上传手动触发）—— 可折叠 + 手动生成 */}
       {transcript && (
-        <div className="mt-4 rounded-xl border border-[rgba(60,90,230,.16)] bg-[linear-gradient(160deg,#F4F7FE_0%,#EEF3FD_100%)] overflow-hidden">
-          <div className="flex w-full items-center gap-2 px-5 py-4">
-            <Sparkles size={16} className="text-accent" />
-            <h2 className="text-base font-semibold">AI 摘要</h2>
+        <div className="mt-4 rounded-xl bg-surface shadow-ring shadow-soft overflow-hidden">
+          <div className="flex w-full items-baseline gap-2.5 px-6 py-5">
+            <Sparkles size={16} className="text-accent self-center" />
+            <h2 className="font-serif text-lg font-semibold tracking-tight">AI 摘要</h2>
             {transcript.summary_model && (
-              <span className="text-[11px] text-text-muted">
+              <span className="text-[11px] text-text-muted font-mono px-2 py-0.5 rounded bg-bg shadow-ring self-center">
                 由 {transcript.summary_model} 生成
               </span>
             )}
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-1 self-center">
               <button
                 onClick={handleGenerateSummary}
                 disabled={generating}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(60,90,230,.3)] bg-white/70 px-2.5 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-white disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-bg shadow-ring px-2.5 py-1.5 text-xs font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:shadow-[0_0_0_1px_var(--accent)] disabled:opacity-50"
               >
                 <RefreshCw
                   size={13}
@@ -301,9 +301,9 @@ export default function RecordingDetailPage({
           </div>
 
           {summaryOpen && (
-            <div className="px-5 pb-5">
+            <div className="px-6 pb-6">
               {summaryError && (
-                <p className="mb-3 text-sm font-medium text-[var(--accent-3)]">
+                <p className="mb-3 text-sm font-medium text-danger">
                   {summaryError}
                 </p>
               )}
@@ -321,9 +321,14 @@ export default function RecordingDetailPage({
               )}
 
               {transcript.summary && (
-                <p className="mb-4 text-sm leading-relaxed text-text-dim">
-                  {transcript.summary}
-                </p>
+                <div className="mb-5">
+                  <div className="mb-2 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-accent-hover">
+                    TL;DR
+                  </div>
+                  <p className="font-serif text-[0.95rem] leading-[1.72] text-text-dim">
+                    {transcript.summary}
+                  </p>
+                </div>
               )}
 
               {(transcript?.outline?.length ?? 0) > 0 &&
@@ -343,26 +348,26 @@ export default function RecordingDetailPage({
                         return (
                           <div key={i} className="flex gap-3">
                             {/* 时间戳 */}
-                            <span className="w-12 shrink-0 pt-2 text-right font-mono text-xs text-text-muted">
+                            <span className="w-12 shrink-0 pt-2 text-right font-mono text-xs font-semibold tabular-nums text-accent">
                               {formatTime(item.start_sec)}
                             </span>
                             {/* 圆点 + 竖虚线 */}
                             <div className="flex w-3 shrink-0 flex-col items-center">
-                              <span className="mt-2.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                              <span className="mt-2.5 h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_0_2px_var(--accent-glow)]" />
                               {!isLast && (
-                                <span className="mt-1 w-px flex-1 border-l border-dashed border-[rgba(60,90,230,.3)]" />
+                                <span className="mt-1 w-px flex-1 border-l border-dashed border-border-hover" />
                               )}
                             </div>
                             {/* 标题卡片 */}
                             <button
                               onClick={() => handleSeek(item.start_sec)}
-                              className="group mb-2 flex-1 rounded-lg bg-white/70 px-4 py-2.5 text-left transition-colors hover:bg-white"
+                              className="group mb-2 flex-1 rounded-lg bg-bg px-4 py-2.5 text-left shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:shadow-[0_0_0_1px_var(--accent)] hover:-translate-y-px"
                             >
-                              <span className="text-sm font-semibold text-text group-hover:text-accent">
+                              <span className="font-serif text-sm font-semibold text-text group-hover:text-accent transition-colors">
                                 {item.title}
                               </span>
                               {item.points?.length > 0 && (
-                                <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[13px] leading-relaxed text-text-dim">
+                                <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[13px] leading-relaxed text-text-muted">
                                   {item.points.map((p, j) => (
                                     <li key={j}>{p}</li>
                                   ))}

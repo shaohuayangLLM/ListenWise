@@ -153,14 +153,14 @@ function RecordsContent() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-136px)] rounded-lg border border-border bg-white">
-      <div className="flex items-center justify-between gap-6 border-b border-border px-5 py-5 md:px-8 md:py-6">
+    <div className="min-h-[calc(100vh-136px)] overflow-hidden rounded-xl border border-border bg-surface shadow-ring shadow-soft">
+      <div className="flex items-center justify-between gap-6 border-b border-border px-5 py-6 md:px-8 md:py-7">
         <div>
-          <h1 className="text-[24px] font-bold tracking-normal">
+          <h1 className="font-serif text-[26px] font-semibold tracking-[-0.01em] text-text">
             {statusLabel(status || "all")}
           </h1>
           {query && (
-            <p className="mt-1 text-[14px] text-text-dim">搜索：{query}</p>
+            <p className="mt-1.5 text-[14px] text-text-muted">搜索：{query}</p>
           )}
         </div>
       </div>
@@ -169,35 +169,35 @@ function RecordsContent() {
         <div
           className={`border-b px-5 py-3 text-[13px] md:px-8 ${
             error
-              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
-              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+              ? "border-[rgba(181,81,63,0.22)] bg-[rgba(181,81,63,0.07)] text-danger"
+              : "border-[rgba(91,140,110,0.24)] bg-[rgba(91,140,110,0.08)] text-success"
           }`}
         >
           {error || message}
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-center border-b border-border px-5 py-4 text-[14px] font-semibold text-text-dim md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6">
+      <div className="grid grid-cols-1 items-center border-b border-border bg-surface-2/60 px-5 py-3.5 text-[12px] font-medium uppercase tracking-[0.06em] text-text-muted md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6">
         <div>文件</div>
         <div className="hidden md:block">创建时间 ↓</div>
         <div className="hidden text-right md:block">操作</div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-text-dim">
+        <div className="flex items-center justify-center py-24 text-text-muted">
           <Loader2 size={28} className="animate-spin" />
         </div>
       ) : filteredRecordings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-[140px] h-[88px] rounded-lg bg-[#dfe8fb] flex items-center justify-center mb-5">
-            <FileAudio size={34} className="text-white" />
+          <div className="mb-5 flex h-[88px] w-[140px] items-center justify-center rounded-xl bg-surface-2 shadow-ring">
+            <FileAudio size={34} className="text-accent/55" />
           </div>
-          <div className="text-[18px] font-medium text-text">
+          <div className="font-serif text-[19px] font-semibold text-text">
             {query ? "没有匹配的转写" : "还没有转写内容"}
           </div>
           <Link
             href="/upload"
-            className="mt-5 inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-5 text-[16px] font-medium text-white hover:opacity-90 transition-opacity"
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-5 text-[16px] font-medium text-white shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover"
           >
             <Upload size={18} />
             上传音频
@@ -213,11 +213,14 @@ function RecordsContent() {
                 onClick={() =>
                   !isEditing && router.push(`/recordings/${recording.id}`)
                 }
-                className="grid grid-cols-1 items-center border-b border-border px-5 py-5 hover:bg-surface transition-colors cursor-pointer md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6"
+                className="group grid cursor-pointer grid-cols-1 items-center border-b border-border px-5 py-5 transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:z-10 hover:rounded-lg hover:border-transparent hover:bg-surface-2/70 hover:shadow-[inset_0_0_0_1px_rgba(201,100,66,0.18)] md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6"
               >
-                <div className="flex items-center gap-5 min-w-0">
-                  <div className="w-[96px] h-[64px] rounded-lg bg-[#dfe8fb] flex items-center justify-center shrink-0">
-                    <FileAudio size={28} className="text-white" />
+                <div className="flex min-w-0 items-center gap-5">
+                  <div className="flex h-[64px] w-[96px] shrink-0 items-center justify-center rounded-xl bg-surface-2 shadow-ring transition-colors duration-300 group-hover:bg-accent-glow">
+                    <FileAudio
+                      size={28}
+                      className="text-text-muted transition-colors duration-300 group-hover:text-accent"
+                    />
                   </div>
                   <div className="min-w-0">
                     {isEditing ? (
@@ -231,23 +234,23 @@ function RecordsContent() {
                           if (e.key === "Enter") saveRename(recording.id);
                           if (e.key === "Escape") setEditingId(null);
                         }}
-                        className="w-full max-w-[420px] rounded-md border border-accent bg-white px-2.5 py-1.5 text-[16px] font-medium text-text focus:outline-none"
+                        className="w-full max-w-[420px] rounded-lg border border-accent bg-surface px-2.5 py-1.5 text-[16px] font-medium text-text shadow-[0_0_0_3px_var(--accent-glow)] focus:outline-none"
                       />
                     ) : (
                       <div className="flex items-center gap-1.5">
                         {recording.is_favorite && (
                           <Star
                             size={15}
-                            className="shrink-0 text-warning"
+                            className="shrink-0 text-accent"
                             fill="currentColor"
                           />
                         )}
-                        <span className="truncate text-[16px] font-medium text-text">
+                        <span className="truncate font-serif text-[16px] font-semibold text-text transition-colors duration-300 group-hover:text-accent">
                           {recording.title}
                         </span>
                       </div>
                     )}
-                    <div className="mt-1.5 text-[13px] text-text-dim">
+                    <div className="mt-1.5 text-[13px] text-text-muted">
                       {formatDuration(recording.duration)}
                       {recording.status !== "done" &&
                         ` · ${statusLabel(recording.status)}`}
@@ -263,48 +266,63 @@ function RecordsContent() {
                   className="mt-4 flex flex-wrap justify-start gap-2 md:mt-0 md:justify-end"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleToggleFavorite(recording)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent"
-                  >
-                    <Star
-                      size={15}
-                      className={recording.is_favorite ? "text-warning" : ""}
-                      fill={recording.is_favorite ? "currentColor" : "none"}
-                    />
-                    {recording.is_favorite ? "取消收藏" : "收藏"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleExportObsidian(recording)}
-                    disabled={recording.status !== "done"}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:text-text-dim"
-                    title={
-                      recording.status === "done"
-                        ? "导出到 Obsidian"
-                        : "转写完成后可导出"
-                    }
-                  >
-                    <FileDown size={15} />
-                    导出 Obsidian
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => startRename(recording)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent"
-                  >
-                    <Pencil size={15} />
-                    重命名
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(recording)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-danger transition-colors hover:border-danger hover:bg-[#FFF4F5]"
-                  >
-                    <Trash2 size={15} />
-                    删除
-                  </button>
+                  <div className="group/act relative">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFavorite(recording)}
+                      aria-label={recording.is_favorite ? "取消收藏" : "收藏"}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:bg-accent-glow hover:text-accent"
+                    >
+                      <Star
+                        size={16}
+                        className={recording.is_favorite ? "text-accent" : ""}
+                        fill={recording.is_favorite ? "currentColor" : "none"}
+                      />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-bg opacity-0 shadow-soft transition-opacity duration-150 group-hover/act:opacity-100">
+                      {recording.is_favorite ? "取消收藏" : "收藏"}
+                    </span>
+                  </div>
+                  <div className="group/act relative">
+                    <button
+                      type="button"
+                      onClick={() => handleExportObsidian(recording)}
+                      disabled={recording.status !== "done"}
+                      aria-label="导出到 Obsidian"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:bg-accent-glow hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-surface disabled:hover:text-text-dim"
+                    >
+                      <FileDown size={16} />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-bg opacity-0 shadow-soft transition-opacity duration-150 group-hover/act:opacity-100">
+                      {recording.status === "done" ? "导出 Obsidian" : "转写完成后可导出"}
+                    </span>
+                  </div>
+                  <div className="group/act relative">
+                    <button
+                      type="button"
+                      onClick={() => startRename(recording)}
+                      aria-label="重命名"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:bg-accent-glow hover:text-accent"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-bg opacity-0 shadow-soft transition-opacity duration-150 group-hover/act:opacity-100">
+                      重命名
+                    </span>
+                  </div>
+                  <div className="group/act relative">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(recording)}
+                      aria-label="删除"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-danger transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:border-danger hover:bg-[rgba(181,81,63,0.08)]"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-bg opacity-0 shadow-soft transition-opacity duration-150 group-hover/act:opacity-100">
+                      删除
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -319,7 +337,7 @@ export default function RecordsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[calc(100vh-136px)] items-center justify-center rounded-lg border border-border bg-white text-text-dim">
+        <div className="flex min-h-[calc(100vh-136px)] items-center justify-center rounded-xl border border-border bg-surface text-text-muted shadow-ring shadow-soft">
           <Loader2 size={28} className="animate-spin" />
         </div>
       }

@@ -49,9 +49,11 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="max-w-[720px] mx-auto py-6">
-      <h1 className="text-2xl font-bold text-center mb-2">新建转写</h1>
-      <p className="text-center text-text-dim text-sm mb-9">
+    <div className="max-w-[720px] mx-auto py-10">
+      <h1 className="font-serif text-[2.05rem] leading-[1.28] font-semibold tracking-[-0.01em] text-center mb-3">
+        新建转写
+      </h1>
+      <p className="text-center text-text-dim text-[0.9375rem] mb-11">
         上传本地音频，或用浏览器录音后转成逐字稿
       </p>
 
@@ -74,30 +76,30 @@ export default function UploadPage() {
           <button
             type="button"
             onClick={() => setShowRecorder(true)}
-            className="w-full py-[18px] rounded-lg border border-border bg-surface text-[15px] font-medium flex items-center justify-center gap-2.5 transition-all hover:border-[var(--accent-3)] hover:bg-[rgba(253,121,168,0.05)]"
+            className="w-full py-[18px] rounded-xl border border-border bg-surface text-[15px] font-medium flex items-center justify-center gap-2.5 shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:border-accent hover:bg-accent-glow hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_var(--accent)]"
           >
-            <Mic size={18} className="text-[var(--accent-3)]" />
+            <Mic size={18} className="text-accent" />
             开始浏览器录音
           </button>
         )}
 
         {/* Additional Info */}
         <div>
-          <h3 className="text-base font-semibold mb-4">补充信息（可选）</h3>
+          <h3 className="font-serif text-lg font-semibold mb-4">补充信息（可选）</h3>
           <div className="space-y-3">
             <input
               type="text"
               placeholder="标题，如：6月2日客户沟通录音"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_1px_var(--accent)] transition-all duration-200"
             />
             <input
               type="text"
               placeholder="备注说明（可选）"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_1px_var(--accent)] transition-all duration-200"
             />
           </div>
         </div>
@@ -120,14 +122,14 @@ export default function UploadPage() {
 
         {/* Error */}
         {error && (
-          <p className="text-sm text-[var(--accent-3)] font-medium">{error}</p>
+          <p className="text-sm text-danger font-medium">{error}</p>
         )}
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full py-3.5 rounded-lg bg-accent text-white font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl bg-accent text-white font-semibold text-sm shadow-ring transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent-hover hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-2"
         >
           {uploading ? (
             <>

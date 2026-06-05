@@ -154,7 +154,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
     const progress = duration > 0 ? currentTime / duration : 0;
 
     return (
-      <div className="bg-surface border border-border rounded-xl p-5 mb-6">
+      <div className="bg-surface rounded-xl shadow-ring shadow-soft p-5 mb-6">
         {/* Hidden audio element */}
         <audio ref={audioRef} src={fileUrl} preload="metadata" />
 
@@ -165,10 +165,10 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           className="relative h-10 cursor-pointer group mb-4"
         >
           {/* Track */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 rounded-full bg-surface-2 overflow-hidden">
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 rounded-full bg-surface-3 overflow-hidden">
             {/* Buffered */}
             <div
-              className="absolute inset-y-0 left-0 bg-[rgba(108,92,231,0.15)] rounded-full transition-[width] duration-300"
+              className="absolute inset-y-0 left-0 bg-accent-glow rounded-full transition-[width] duration-300"
               style={{ width: `${buffered * 100}%` }}
             />
             {/* Progress */}
@@ -180,7 +180,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           {/* Thumb */}
           <div
             className={clsx(
-              "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-accent border-2 border-white shadow-sm transition-transform",
+              "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_0_1px_var(--accent),0_1px_3px_rgba(20,20,19,0.2)] transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
               "group-hover:scale-125"
             )}
             style={{ left: `${progress * 100}%` }}
@@ -201,8 +201,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
             onClick={togglePlay}
             disabled={!ready}
             className={clsx(
-              "w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center transition-opacity",
-              ready ? "hover:opacity-90" : "opacity-50"
+              "w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center shadow-[0_0_0_1px_rgba(20,20,19,0.04)] transition-colors duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
+              ready ? "hover:bg-accent-hover" : "opacity-50"
             )}
           >
             {isPlaying ? (
@@ -220,13 +220,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
             <SkipForward size={18} />
           </button>
 
-          <span className="text-sm font-mono text-text-dim">
-            {formatTime(currentTime)} / {formatTime(duration)}
+          <span className="text-sm font-mono text-text-dim tabular-nums">
+            <span className="text-accent font-semibold">{formatTime(currentTime)}</span> / {formatTime(duration)}
           </span>
 
           <button
             onClick={cycleSpeed}
-            className="ml-auto px-3 py-1 rounded-md bg-surface-2 border border-border text-xs font-mono font-medium hover:border-border-hover transition-colors"
+            className="ml-auto px-3 py-1.5 rounded-lg bg-surface text-text-dim text-xs font-mono font-medium shadow-ring hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)] transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)]"
           >
             {speed.toFixed(1)}x
           </button>

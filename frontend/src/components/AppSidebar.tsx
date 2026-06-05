@@ -21,13 +21,13 @@ export default function AppSidebar() {
       key={href}
       href={href}
       className={clsx(
-        "flex h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors",
+        "flex h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
         isActive(href)
-          ? "bg-accent-glow text-accent"
+          ? "bg-accent-glow text-accent shadow-[inset_0_0_0_1px_var(--accent-glow)]"
           : "text-text-dim hover:bg-surface-2 hover:text-text"
       )}
     >
-      <Icon size={18} />
+      <Icon size={18} className={clsx(isActive(href) && "text-accent")} />
       <span>{label}</span>
     </Link>
   );
