@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronDown,
   Download,
+  FileDown,
   Loader2,
   RefreshCw,
   Sparkles,
@@ -15,6 +16,7 @@ import {
 import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TranscriptPanel from "@/components/TranscriptPanel";
 import {
+  exportRecordingToObsidian,
   exportTranscript,
   getRecordingDetail,
   mediaUrl,
@@ -84,6 +86,8 @@ export default function RecordingDetailPage({
   const [outlineExpanded, setOutlineExpanded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const playerRef = useRef<AudioPlayerHandle>(null);
 
   useEffect(() => {
@@ -116,6 +120,21 @@ export default function RecordingDetailPage({
       setSummaryError(detail || "生成失败，请重试");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleExportObsidian = async () => {
+    if (!recording) return;
+    setExportMessage(null);
+    setExportError(null);
+    try {
+      const result = await exportRecordingToObsidian(recording.id);
+      setExportMessage(`已导出到 Obsidian：${result.relative_path}`);
+    } catch (err) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail;
+      setExportError(detail || "导出到 Obsidian 失败");
     }
   };
 
@@ -176,8 +195,35 @@ export default function RecordingDetailPage({
               {item.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={handleExportObsidian}
+            disabled={recording.status !== "done" || !recording.transcript}
+            title={
+              recording.status === "done" && recording.transcript
+                ? "导出到 Obsidian"
+                : "转写完成后可导出到 Obsidian"
+            }
+            aria-label="导出到 Obsidian"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:text-text-dim"
+          >
+            <FileDown size={14} />
+          </button>
         </div>
       </div>
+
+      {(exportMessage || exportError) && (
+        <div
+          className={clsx(
+            "mb-4 rounded-lg border px-4 py-3 text-[13px]",
+            exportError
+              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
+              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+          )}
+        >
+          {exportError || exportMessage}
+        </div>
+      )}
 
       {/* Audio Player */}
       {recording.file_url && (

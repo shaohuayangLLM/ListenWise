@@ -233,7 +233,7 @@ export default function HomePage() {
           </div>
         </Link>
 
-        {/* 卡 3：播客链接转写（蓝） */}
+        {/* 卡 3：播客（蓝） */}
         <Link
           href="/podcast"
           className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-[20px] border border-[rgba(60,90,230,.18)] bg-[linear-gradient(160deg,#E7EBFE_0%,#DCE3FD_70%,#CBD6FB_100%)] p-7 transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(60,90,230,.18)]"
@@ -268,11 +268,11 @@ export default function HomePage() {
             </g>
           </svg>
           <div className="relative z-10 mb-2.5 text-[22px] font-bold tracking-tight text-text">
-            播客链接转写
+            播客
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
-            <p>粘贴单集播客链接</p>
-            <p>无需下载，智能提炼总结</p>
+            <p>订阅节目，集中查看 shownotes</p>
+            <p>按需获取单集文字稿</p>
           </div>
         </Link>
       </section>

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileAudio, Home, Settings } from "lucide-react";
+import { FileAudio, Home, Podcast, Settings } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { href: "/", label: "首页", icon: Home },
+  { href: "/podcast", label: "播客", icon: Podcast },
   { href: "/records", label: "我的记录", icon: FileAudio },
 ];
 

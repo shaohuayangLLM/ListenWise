@@ -45,6 +45,13 @@ class Settings(BaseSettings):
     # CORS 允许来源（逗号分隔）；生产填 Vercel 前端域名
     cors_origins: str = "http://localhost:3000"
 
+    # 本地 Obsidian 导出。生产环境若没有挂载本机 vault，可留空禁用。
+    obsidian_vault_path: str = "/Users/ysh/Manual Library/Obsidian/Knowledge"
+    obsidian_export_dir: str = "ListenWise"
+
+    # YouTube 搜索。配置后播客搜索页会返回 YouTube 视频候选。
+    youtube_api_key: str = ""
+
     # Upload 限制
     max_file_size_mb: int = 500          # 音频文件上限
     max_video_size_mb: int = 6144        # 视频文件上限（6GB）

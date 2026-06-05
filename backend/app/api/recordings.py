@@ -14,10 +14,12 @@ from fastapi import (
 )
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.database import get_db
 from app.models.base import RecordingSource, RecordingStatus, SceneType
+from app.models.podcast import PodcastEpisode
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 from app.schemas.recording import (
@@ -32,6 +34,7 @@ from app.schemas.recording import (
     recording_to_response,
 )
 from app.services.storage import UPLOADS_DIR, get_file_url, save_file
+from app.services.obsidian_export import export_recording_to_obsidian
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +203,40 @@ async def delete_recording(
 
     await db.delete(recording)
     await db.commit()
+
+
+@router.post("/{recording_id}/export/obsidian")
+async def export_to_obsidian(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    recording = result.scalar_one_or_none()
+    if not recording:
+        raise HTTPException(status_code=404, detail="Recording not found")
+    if recording.status != RecordingStatus.done:
+        raise HTTPException(status_code=400, detail="转写完成后才能导出到 Obsidian")
+
+    result = await db.execute(
+        select(Transcript).where(Transcript.recording_id == recording_id)
+    )
+    transcript = result.scalar_one_or_none()
+    if not transcript:
+        raise HTTPException(status_code=404, detail="Transcript not ready yet")
+
+    episode_result = await db.execute(
+        select(PodcastEpisode)
+        .options(selectinload(PodcastEpisode.show))
+        .where(PodcastEpisode.recording_id == recording_id)
+    )
+    episode = episode_result.scalar_one_or_none()
+
+    try:
+        return export_recording_to_obsidian(recording, transcript, episode)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("", response_model=RecordingListResponse)

@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from app.celery_app import celery_app
-from app.models.base import Capability, RecordingSource, RecordingStatus
+from app.models.base import Capability, RecordingStatus
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 from app.services.provider_config import resolve_sync
@@ -60,25 +60,6 @@ def run_transcription(recording_id: int):
         recording.duration = int(result.segments[-1]["end"]) if result.segments else 0
         db.commit()
         logger.info("Recording %d status -> done", recording_id)
-
-        # 6. 播客来源：转写完成自动生成 summary（D8：transcript+summary 自动）
-        if recording.source == RecordingSource.podcast:
-            try:
-                from datetime import datetime, timezone
-
-                from app.services.summarize import summarize
-
-                llm = resolve_sync(db, Capability.llm)
-                if llm and llm.api_key:
-                    s = summarize(result.segments, llm)
-                    transcript.summary = s.get("tldr", "")
-                    transcript.outline = s.get("outline", [])
-                    transcript.summary_model = llm.model
-                    transcript.summary_at = datetime.now(timezone.utc)
-                    db.commit()
-                    logger.info("Recording %d podcast summary generated", recording_id)
-            except Exception as e:  # noqa: BLE001 - 摘要失败不影响转写
-                logger.error("Podcast summary failed for %d: %s", recording_id, e)
 
     except Exception as e:
         logger.exception("Transcription failed for recording %d: %s", recording_id, e)

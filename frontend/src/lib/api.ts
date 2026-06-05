@@ -116,6 +116,15 @@ export async function deleteRecording(id: number): Promise<void> {
   await api.delete(`/recordings/${id}`);
 }
 
+export async function exportRecordingToObsidian(
+  id: number
+): Promise<{ path: string; relative_path: string }> {
+  const { data } = await api.post<{ path: string; relative_path: string }>(
+    `/recordings/${id}/export/obsidian`
+  );
+  return data;
+}
+
 export async function exportTranscript(
   id: number,
   format: string,
@@ -133,19 +142,6 @@ export async function exportTranscript(
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-}
-
-export interface CreatePodcastParams {
-  url: string;
-  title?: string;
-}
-
-export async function createPodcast({
-  url,
-  title,
-}: CreatePodcastParams): Promise<UploadResponse> {
-  const { data } = await api.post<UploadResponse>("/podcasts", { url, title });
-  return data;
 }
 
 export async function getRecordings(
@@ -274,5 +270,195 @@ export async function testProvider(
   capability: string
 ): Promise<{ ok: boolean; message: string }> {
   const { data } = await api.post(`/settings/providers/${capability}/test`);
+  return data;
+}
+
+// ===== 播客节目与单集目录 =====
+export interface PodcastShow {
+  id: number;
+  title: string;
+  author: string | null;
+  description: string | null;
+  cover_url: string | null;
+  source_type: string;
+  source_url: string;
+  feed_url: string | null;
+  is_subscribed: boolean;
+  source_limited: boolean;
+  last_sync_message: string | null;
+  last_synced_at: string | null;
+  episode_count: number;
+  transcript_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PodcastEpisode {
+  id: number;
+  show_id: number | null;
+  show_title: string | null;
+  recording_id: number | null;
+  recording_status: string;
+  title: string;
+  description: string | null;
+  shownotes_text: string | null;
+  episode_url: string | null;
+  audio_url_available: boolean;
+  cover_url: string | null;
+  published_at: string | null;
+  duration: number;
+  suggested_show_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PodcastEpisodeDetail extends PodcastEpisode {
+  transcript: Transcript | null;
+}
+
+export interface PodcastRefreshResult {
+  show_id: number;
+  title: string;
+  added: number;
+  updated: number;
+  message: string | null;
+  error: string | null;
+}
+
+export interface PodcastSearchResult {
+  source_type: "podcast" | "youtube_video";
+  title: string;
+  author: string | null;
+  description: string | null;
+  cover_url: string | null;
+  feed_url: string | null;
+  source_url: string | null;
+  episode_count: number | null;
+  source_label: string | null;
+  published_at: string | null;
+  subscribed_show_id: number | null;
+}
+
+export interface PodcastPreviewShow {
+  title: string;
+  author: string | null;
+  description: string | null;
+  cover_url: string | null;
+  source_type: string;
+  source_url: string;
+  feed_url: string | null;
+  source_limited: boolean;
+  sync_message: string | null;
+  total_available: number;
+  subscribed_show_id: number | null;
+}
+
+export interface PodcastPreviewEpisode {
+  title: string;
+  description: string | null;
+  shownotes_text: string | null;
+  episode_url: string | null;
+  audio_url_available: boolean;
+  cover_url: string | null;
+  published_at: string | null;
+  duration: number;
+}
+
+export interface PodcastPreview {
+  show: PodcastPreviewShow;
+  episodes: PodcastPreviewEpisode[];
+}
+
+export async function getPodcastShows(): Promise<PodcastShow[]> {
+  const { data } = await api.get<PodcastShow[]>("/podcasts/shows");
+  return data;
+}
+
+export async function searchPodcastShows(
+  q: string
+): Promise<PodcastSearchResult[]> {
+  const { data } = await api.get<PodcastSearchResult[]>("/podcasts/search", {
+    params: { q },
+  });
+  return data;
+}
+
+export async function previewPodcastShow(url: string): Promise<PodcastPreview> {
+  const { data } = await api.get<PodcastPreview>("/podcasts/preview", {
+    params: { url },
+  });
+  return data;
+}
+
+export async function subscribePodcastShow(url: string): Promise<PodcastShow> {
+  const { data } = await api.post<PodcastShow>("/podcasts/shows", { url });
+  return data;
+}
+
+export async function refreshPodcastShows(): Promise<PodcastRefreshResult[]> {
+  const { data } = await api.post<PodcastRefreshResult[]>("/podcasts/shows/refresh");
+  return data;
+}
+
+export async function getPodcastShow(id: number): Promise<PodcastShow> {
+  const { data } = await api.get<PodcastShow>(`/podcasts/shows/${id}`);
+  return data;
+}
+
+export async function refreshPodcastShow(id: number): Promise<PodcastRefreshResult> {
+  const { data } = await api.post<PodcastRefreshResult>(`/podcasts/shows/${id}/refresh`);
+  return data;
+}
+
+export async function loadMorePodcastEpisodes(id: number): Promise<PodcastRefreshResult> {
+  const { data } = await api.post<PodcastRefreshResult>(`/podcasts/shows/${id}/load-more`);
+  return data;
+}
+
+export async function unsubscribePodcastShow(id: number): Promise<void> {
+  await api.post(`/podcasts/shows/${id}/unsubscribe`);
+}
+
+export async function deletePodcastShow(id: number): Promise<void> {
+  await api.delete(`/podcasts/shows/${id}`);
+}
+
+export async function getPodcastEpisodes(showId?: number): Promise<PodcastEpisode[]> {
+  const { data } = await api.get<PodcastEpisode[]>("/podcasts/episodes", {
+    params: showId ? { show_id: showId } : undefined,
+  });
+  return data;
+}
+
+export async function importPodcastEpisode(
+  url: string,
+  title?: string
+): Promise<PodcastEpisode> {
+  const { data } = await api.post<PodcastEpisode>("/podcasts/episodes", { url, title });
+  return data;
+}
+
+export async function getPodcastEpisode(id: number): Promise<PodcastEpisodeDetail> {
+  const { data } = await api.get<PodcastEpisodeDetail>(`/podcasts/episodes/${id}`);
+  return data;
+}
+
+export async function transcribePodcastEpisode(
+  id: number
+): Promise<{ recording_id: number; status: string }> {
+  const { data } = await api.post(`/podcasts/episodes/${id}/transcribe`);
+  return data;
+}
+
+export async function batchTranscribePodcastEpisodes(
+  episodeIds: number[]
+): Promise<{
+  started: number;
+  recording_ids: number[];
+  skipped: { episode_id: number; reason: string }[];
+}> {
+  const { data } = await api.post("/podcasts/episodes/batch-transcribe", {
+    episode_ids: episodeIds,
+  });
   return data;
 }

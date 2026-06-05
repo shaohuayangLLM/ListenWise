@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FileAudio,
+  FileDown,
   Loader2,
-  MoreHorizontal,
   Pencil,
   Star,
   Trash2,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   deleteRecording,
+  exportRecordingToObsidian,
   getRecordings,
   updateRecording,
   type Recording,
@@ -56,9 +57,10 @@ function RecordsContent() {
   const status = searchParams.get("status")?.trim() || "";
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getRecordings(1, 100)
@@ -95,7 +97,6 @@ function RecordsContent() {
     setRecordings((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const handleToggleFavorite = async (rec: Recording) => {
-    setOpenMenuId(null);
     const next = !rec.is_favorite;
     patchLocal(rec.id, { is_favorite: next });
     try {
@@ -106,7 +107,6 @@ function RecordsContent() {
   };
 
   const startRename = (rec: Recording) => {
-    setOpenMenuId(null);
     setEditingId(rec.id);
     setEditValue(rec.title);
   };
@@ -125,7 +125,6 @@ function RecordsContent() {
   };
 
   const handleDelete = async (rec: Recording) => {
-    setOpenMenuId(null);
     if (
       !window.confirm(`确定删除「${rec.title}」？转写记录与音频将一并移除，无法恢复。`)
     )
@@ -137,6 +136,19 @@ function RecordsContent() {
     } catch {
       setRecordings(snapshot); // 回滚
       window.alert("删除失败，请重试");
+    }
+  };
+
+  const handleExportObsidian = async (rec: Recording) => {
+    setMessage(null);
+    setError(null);
+    try {
+      const result = await exportRecordingToObsidian(rec.id);
+      setMessage(`已导出到 Obsidian：${result.relative_path}`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "导出到 Obsidian 失败"
+      );
     }
   };
 
@@ -153,10 +165,22 @@ function RecordsContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_64px] items-center border-b border-border px-5 py-4 text-[14px] font-semibold text-text-dim md:grid-cols-[1fr_260px_80px] md:px-6">
+      {(message || error) && (
+        <div
+          className={`border-b px-5 py-3 text-[13px] md:px-8 ${
+            error
+              ? "border-[#FFD6D9] bg-[#FFF4F5] text-[#C83B48]"
+              : "border-[#CFE7D8] bg-[#F1FBF5] text-[#167A45]"
+          }`}
+        >
+          {error || message}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 items-center border-b border-border px-5 py-4 text-[14px] font-semibold text-text-dim md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6">
         <div>文件</div>
         <div className="hidden md:block">创建时间 ↓</div>
-        <div className="text-right">操作</div>
+        <div className="hidden text-right md:block">操作</div>
       </div>
 
       {loading ? (
@@ -189,7 +213,7 @@ function RecordsContent() {
                 onClick={() =>
                   !isEditing && router.push(`/recordings/${recording.id}`)
                 }
-                className="grid grid-cols-[1fr_64px] items-center border-b border-border px-5 py-5 hover:bg-surface transition-colors cursor-pointer md:grid-cols-[1fr_260px_80px] md:px-6"
+                className="grid grid-cols-1 items-center border-b border-border px-5 py-5 hover:bg-surface transition-colors cursor-pointer md:grid-cols-[minmax(0,1fr)_220px_360px] md:px-6"
               >
                 <div className="flex items-center gap-5 min-w-0">
                   <div className="w-[96px] h-[64px] rounded-lg bg-[#dfe8fb] flex items-center justify-center shrink-0">
@@ -236,63 +260,51 @@ function RecordsContent() {
                 </div>
 
                 <div
-                  className="relative flex justify-end"
+                  className="mt-4 flex flex-wrap justify-start gap-2 md:mt-0 md:justify-end"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpenMenuId(
-                        openMenuId === recording.id ? null : recording.id
-                      )
-                    }
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-text-dim hover:bg-surface-2 hover:text-text transition-colors"
-                    aria-label="更多操作"
+                    onClick={() => handleToggleFavorite(recording)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent"
                   >
-                    <MoreHorizontal size={25} />
+                    <Star
+                      size={15}
+                      className={recording.is_favorite ? "text-warning" : ""}
+                      fill={recording.is_favorite ? "currentColor" : "none"}
+                    />
+                    {recording.is_favorite ? "取消收藏" : "收藏"}
                   </button>
-
-                  {openMenuId === recording.id && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setOpenMenuId(null)}
-                      />
-                      <div className="absolute right-0 top-11 z-20 w-36 overflow-hidden rounded-lg border border-border bg-white py-1 shadow-lg">
-                        <button
-                          onClick={() => handleToggleFavorite(recording)}
-                          className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[14px] text-text hover:bg-surface"
-                        >
-                          <Star
-                            size={15}
-                            className={
-                              recording.is_favorite
-                                ? "text-warning"
-                                : "text-text-dim"
-                            }
-                            fill={
-                              recording.is_favorite ? "currentColor" : "none"
-                            }
-                          />
-                          {recording.is_favorite ? "取消收藏" : "收藏"}
-                        </button>
-                        <button
-                          onClick={() => startRename(recording)}
-                          className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[14px] text-text hover:bg-surface"
-                        >
-                          <Pencil size={15} className="text-text-dim" />
-                          重命名
-                        </button>
-                        <button
-                          onClick={() => handleDelete(recording)}
-                          className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[14px] text-danger hover:bg-surface"
-                        >
-                          <Trash2 size={15} />
-                          删除
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleExportObsidian(recording)}
+                    disabled={recording.status !== "done"}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:text-text-dim"
+                    title={
+                      recording.status === "done"
+                        ? "导出到 Obsidian"
+                        : "转写完成后可导出"
+                    }
+                  >
+                    <FileDown size={15} />
+                    导出 Obsidian
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startRename(recording)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent"
+                  >
+                    <Pencil size={15} />
+                    重命名
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(recording)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-[13px] font-medium text-danger transition-colors hover:border-danger hover:bg-[#FFF4F5]"
+                  >
+                    <Trash2 size={15} />
+                    删除
+                  </button>
                 </div>
               </div>
             );
