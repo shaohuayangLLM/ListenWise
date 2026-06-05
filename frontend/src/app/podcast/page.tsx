@@ -108,18 +108,37 @@ export default function PodcastPage() {
 
   const handleSearch = async (event: FormEvent) => {
     event.preventDefault();
-    if (!searchTerm.trim()) return;
+    const term = searchTerm.trim();
+    if (!term) return;
     setSearching(true);
     setError(null);
     setMessage(null);
     try {
-      const results = await searchPodcastShows(searchTerm.trim());
+      // 智能识别：粘贴的是链接 → 直接订阅/导入（小宇宙等独占节目 Apple 搜索查不到，这里兜住）
+      if (/^https?:\/\//i.test(term)) {
+        if (/xiaoyuzhoufm\.com\/episode\//i.test(term)) {
+          const episode = await importPodcastEpisode(term);
+          setMessage(`已导入「${episode.title}」，可在单集详情手动获取文字稿`);
+          setView("episodes");
+        } else {
+          const show = await subscribePodcastShow(term);
+          setMessage(`已订阅「${show.title}」，同步 ${show.episode_count} 集`);
+          setView("shows");
+        }
+        setSearchTerm("");
+        setSearchResults([]);
+        await reload();
+        return;
+      }
+      const results = await searchPodcastShows(term);
       setSearchResults(results);
       if (results.length === 0) {
-        setMessage("没有找到可订阅的节目，可尝试粘贴 RSS 或小宇宙节目链接");
+        setMessage("没有找到可订阅的节目，可直接把 RSS / 小宇宙节目链接粘到上方搜索框订阅");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "节目搜索失败");
+      setError(
+        err instanceof Error ? err.message : "处理失败，请确认搜索词或链接是否有效"
+      );
     } finally {
       setSearching(false);
     }
@@ -220,7 +239,7 @@ export default function PodcastPage() {
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="搜索节目名称、作者或 YouTube 视频"
+              placeholder="搜索节目、作者，或粘贴节目 / RSS / 小宇宙链接直接订阅"
               className="h-11 w-full rounded-lg border border-border bg-bg pl-11 pr-4 text-[14px] outline-none transition-colors focus:border-accent focus:bg-surface"
             />
           </div>
@@ -229,7 +248,7 @@ export default function PodcastPage() {
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-[14px] font-medium text-white transition-all duration-300 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-accent-hover disabled:opacity-40"
           >
             {searching && <Loader2 size={16} className="animate-spin" />}
-            搜索节目
+            {/^https?:\/\//i.test(searchTerm) ? "订阅链接" : "搜索节目"}
           </button>
         </form>
 
