@@ -12,6 +12,7 @@ from fastapi import (
     Query,
     UploadFile,
 )
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -354,6 +355,33 @@ async def get_transcript(
         "summary_at": transcript.summary_at,
         "created_at": transcript.created_at,
     }
+
+
+class SpeakerLabelsUpdate(BaseModel):
+    speaker_labels: dict[str, str]
+
+
+@router.patch("/{recording_id}/transcript/speakers")
+async def update_speaker_labels(
+    recording_id: int,
+    body: SpeakerLabelsUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """重命名说话人：更新 transcript.speaker_labels（如 {"A": "徐涛"}）；空值恢复默认 A/B/C。"""
+    result = await db.execute(
+        select(Transcript).where(Transcript.recording_id == recording_id)
+    )
+    transcript = result.scalar_one_or_none()
+    if not transcript:
+        raise HTTPException(status_code=404, detail="Transcript not found")
+
+    labels = {
+        k: v.strip() for k, v in body.speaker_labels.items() if v and v.strip()
+    }
+    transcript.speaker_labels = labels
+    transcript.is_edited = True
+    await db.commit()
+    return {"speaker_labels": transcript.speaker_labels}
 
 
 def _generate_summary_sync(recording_id: int) -> dict:

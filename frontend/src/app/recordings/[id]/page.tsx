@@ -9,6 +9,7 @@ import {
   Download,
   FileDown,
   Loader2,
+  Pencil,
   RefreshCw,
   Sparkles,
   Users,
@@ -21,6 +22,7 @@ import {
   getRecordingDetail,
   mediaUrl,
   regenerateSummary,
+  updateSpeakerLabels,
   type RecordingDetail,
   type TranscriptSegment,
 } from "@/lib/api";
@@ -88,6 +90,8 @@ export default function RecordingDetailPage({
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const playerRef = useRef<AudioPlayerHandle>(null);
 
   useEffect(() => {
@@ -144,6 +148,33 @@ export default function RecordingDetailPage({
     ? buildSpeakerStats(transcript.segments, speakerLabels)
     : [];
   const hasSummary = !!transcript?.summary || (transcript?.outline?.length ?? 0) > 0;
+
+  const startRenameSpeaker = (sp: SpeakerStat) => {
+    setEditingSpeaker(sp.speaker);
+    // 默认名（A/B/C）时清空让用户直接输入真名
+    setEditName(sp.name === sp.speaker ? "" : sp.name);
+  };
+
+  const saveRenameSpeaker = async (speaker: string) => {
+    const name = editName.trim();
+    setEditingSpeaker(null);
+    const current = speakerLabels[speaker] || "";
+    if (name === current) return;
+    const labels = { ...speakerLabels };
+    if (name) labels[speaker] = name;
+    else delete labels[speaker];
+    setRecording((prev) =>
+      prev && prev.transcript
+        ? { ...prev, transcript: { ...prev.transcript, speaker_labels: labels } }
+        : prev
+    );
+    try {
+      if (recording) await updateSpeakerLabels(recording.id, labels);
+    } catch {
+      // 失败则重新拉取恢复
+      getRecordingDetail(Number(id)).then(setRecording);
+    }
+  };
 
   if (loading) {
     return (
@@ -244,13 +275,38 @@ export default function RecordingDetailPage({
           {speakers.map((sp) => (
             <span
               key={sp.speaker}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface shadow-ring text-xs"
+              className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface shadow-ring text-xs"
             >
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: speakerColor(sp.speaker) }}
               />
-              <span className="font-medium">{sp.name}</span>
+              {editingSpeaker === sp.speaker ? (
+                <input
+                  value={editName}
+                  autoFocus
+                  placeholder={sp.speaker}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onBlur={() => saveRenameSpeaker(sp.speaker)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveRenameSpeaker(sp.speaker);
+                    if (e.key === "Escape") setEditingSpeaker(null);
+                  }}
+                  className="w-20 rounded border border-accent bg-bg px-1 py-0.5 text-xs text-text focus:outline-none"
+                />
+              ) : (
+                <button
+                  onClick={() => startRenameSpeaker(sp)}
+                  title="点击重命名说话人"
+                  className="inline-flex items-center gap-1 font-medium transition-colors hover:text-accent"
+                >
+                  {sp.name}
+                  <Pencil
+                    size={11}
+                    className="opacity-0 transition-opacity group-hover:opacity-60"
+                  />
+                </button>
+              )}
               <span className="text-text-muted font-mono tabular-nums">{sp.segments} 段</span>
             </span>
           ))}

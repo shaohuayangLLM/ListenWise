@@ -211,6 +211,16 @@ export async function regenerateSummary(id: number): Promise<SummaryResult> {
   return data;
 }
 
+export async function updateSpeakerLabels(
+  id: number,
+  speakerLabels: Record<string, string>
+): Promise<{ speaker_labels: Record<string, string> }> {
+  const { data } = await api.patch(`/recordings/${id}/transcript/speakers`, {
+    speaker_labels: speakerLabels,
+  });
+  return data;
+}
+
 export async function getRecordingDetail(
   id: number
 ): Promise<RecordingDetail> {
