@@ -18,6 +18,8 @@ def upload_to_supabase_sync(local_path: str) -> str | None:
     with open(local_path, "rb") as f:
         content = f.read()
     base = settings.supabase_url.rstrip("/")
+    if not base.startswith(("http://", "https://")):
+        base = f"https://{base}"
     bucket = settings.supabase_bucket
     resp = httpx.post(
         f"{base}/storage/v1/object/{bucket}/{filename}",
