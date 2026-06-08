@@ -5,7 +5,6 @@ from app.config import settings
 from app.models.podcast import PodcastEpisode
 from app.models.recording import Recording
 from app.models.transcript import Transcript
-from app.services.export import _format_timestamp
 
 _FILENAME_UNSAFE = re.compile(r'[\\/:*?"<>|\n\r\t]+')
 
@@ -129,7 +128,7 @@ def _ai_section(transcript: Transcript) -> list[str]:
             if not isinstance(item, dict):
                 continue
             title = item.get("title") or "未命名章节"
-            timestamp = _format_timestamp(item.get("start_sec", 0))
+            timestamp = _ts_hms(item.get("start_sec", 0))
             lines.append(f"- **[{timestamp}] {title}**")
             for point in item.get("points") or []:
                 lines.append(f"  - {point}")
@@ -140,7 +139,7 @@ def _ai_section(transcript: Transcript) -> list[str]:
         for item in transcript.highlights:
             if not isinstance(item, dict):
                 continue
-            timestamp = _format_timestamp(item.get("start_sec", 0))
+            timestamp = _ts_hms(item.get("start_sec", 0))
             quote = item.get("quote") or ""
             speaker = f"（{item.get('speaker')}）" if item.get("speaker") else ""
             lines.append(f"- **[{timestamp}]**{speaker} {quote}")

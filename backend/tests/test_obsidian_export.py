@@ -81,8 +81,8 @@ def test_export_podcast_recording_includes_metadata_and_ai_sections(
     assert "- 原始链接：[链接](https://example.com/episode)" in output
     assert "## AI 解读" in output
     assert "这是一段 AI 摘要。" in output
-    assert "**[00:03] 开场**" in output
+    assert "**[00:00:03] 开场**" in output
     assert "## Shownotes" in output
     assert "这里是 shownotes" in output
     assert "## 文字稿" in output
-    assert "**[00:03]** **A** 第一句话" in output
+    assert "**[00:00:03]** **A** 第一句话" in output
