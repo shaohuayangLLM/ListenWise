@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from app.celery_app import celery_app
-from app.models.base import Capability, RecordingStatus
+from app.models.base import Capability, RecordingSource, RecordingStatus
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 from app.services.provider_config import resolve_sync
@@ -84,6 +84,16 @@ def run_transcription(recording_id: int):
             except Exception as e:  # noqa: BLE001 - 持久化失败不影响转写结果
                 logger.warning("Audio persist failed for %d: %s", recording_id, e)
 
+        # 7. piggyback：清理 30 天前的上传音频，释放 Supabase Storage 空间
+        try:
+            cleaned = cleanup_old_audio(db, days=30)
+            if cleaned:
+                logger.info(
+                    "Cleaned %d old audio file(s) from Supabase Storage", cleaned
+                )
+        except Exception as e:  # noqa: BLE001 - 清理失败不影响转写
+            logger.warning("Audio cleanup failed: %s", e)
+
     except Exception as e:
         logger.exception("Transcription failed for recording %d: %s", recording_id, e)
         recording = db.query(Recording).filter(Recording.id == recording_id).first()
@@ -92,6 +102,36 @@ def run_transcription(recording_id: int):
             db.commit()
     finally:
         db.close()
+
+
+def cleanup_old_audio(db, days: int = 30) -> int:
+    """删除超过 days 天的上传音频文件（Supabase Storage），保留记录与转写稿。返回清理数。
+
+    piggyback：每次转写完成后顺带调用（Render 免费实例无 cron）。只清上传来源、
+    已持久化到 Supabase 的音频；播客外链与本地文件不动；file_url 置空，详情页降级为无回放。
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from app.services.storage import delete_from_supabase_sync
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    olds = (
+        db.query(Recording)
+        .filter(
+            Recording.source == RecordingSource.upload,
+            Recording.created_at < cutoff,
+            Recording.file_url.like("%supabase.co%"),
+        )
+        .all()
+    )
+    cleaned = 0
+    for r in olds:
+        if delete_from_supabase_sync(r.file_url):
+            r.file_url = ""
+            cleaned += 1
+    if cleaned:
+        db.commit()
+    return cleaned
 
 
 @celery_app.task(bind=True)

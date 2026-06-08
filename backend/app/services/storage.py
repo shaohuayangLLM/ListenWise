@@ -35,6 +35,24 @@ def upload_to_supabase_sync(local_path: str) -> str | None:
     return f"{base}/storage/v1/object/public/{bucket}/{filename}"
 
 
+def delete_from_supabase_sync(public_url: str) -> bool:
+    """按 public URL 从 Supabase Storage 删除一个文件；未配置/无文件名返回 False，404 视为已删。"""
+    if not (settings.supabase_url and settings.supabase_service_key):
+        return False
+    filename = public_url.split("?")[0].rsplit("/", 1)[-1]
+    if not filename:
+        return False
+    base = settings.supabase_url.rstrip("/")
+    if not base.startswith(("http://", "https://")):
+        base = f"https://{base}"
+    resp = httpx.delete(
+        f"{base}/storage/v1/object/{settings.supabase_bucket}/{filename}",
+        headers={"Authorization": f"Bearer {settings.supabase_service_key}"},
+        timeout=60,
+    )
+    return resp.status_code in (200, 204, 404)
+
+
 async def save_file(file: UploadFile, recording_id: int) -> str:
     """Save uploaded file to local storage. Returns the relative file path."""
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
