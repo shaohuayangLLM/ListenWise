@@ -4,7 +4,7 @@
 
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `main`（已推 GitHub）
-**最后更新：** 2026-06-05
+**最后更新：** 2026-06-08
 
 ---
 
@@ -148,6 +148,13 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - 搜索结果按源优先级排序 **小宇宙 > Apple > 喜马拉雅** + 来源标签（小宇宙陶土强调）。受限于小宇宙无公开搜索 API，Apple 注册非小宇宙 feed 的节目其单集链接仍跟随原始源。
 - 单集详情页 tab：Shownotes 移到前面并默认显示。
 - preview 预览页与已订阅节目详情：单集列表支持**单集级「获取文字稿」**（preview 订阅前即“导入这一集 + 转写”，无需订阅整个节目）。
+
+### ✅ M11 — 说话人重命名 + 音频持久化 + 定时清理（2026-06-08）
+
+- **说话人重命名/重识别**（P0 模块4）：详情页说话人 chip 点名字改真名；后端 `PATCH /recordings/{id}/transcript/speakers` 更新 `speaker_labels`（空值恢复默认）。逐字稿与图例同步显示真名。
+- **音频持久化到 Supabase Storage**：转写完成后把本地音频转存 Supabase Storage（`file_url` 变 public URL）+ 删本地临时，解决 Render 临时盘部署/重启丢音频。踩坑：`SUPABASE_URL` 须带 `https://`（已代码容错）、Render 蓝绿部署切换时机。⚠️ Supabase Free 对象存储仅 **1 GB**。
+- **定时清理（piggyback）**：每次转写完成后顺带删 30 天前的上传音频文件（保留记录+转写稿，`file_url` 置空），Render 免费实例无 cron 的零配置方案。
+- **CLAUDE.md 重写**（`/init`）：从 M2 过时版（narrowed 单流程/DashScope/Celery）→ 反映当前架构 + 6 条关键 gotchas，112→58 行。
 
 ---
 
