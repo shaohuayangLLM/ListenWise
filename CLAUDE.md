@@ -2,111 +2,61 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## 产品概述
 
-ListenWise（音频转写工具）— Converts audio recordings into text transcripts using ASR. The product was deliberately narrowed (2026-06-02) from a multi-scene "audio-to-document" platform down to a single focused flow:
+ListenWise — **云 API 聚合的音频转写 + AI 分析工作台**（中文产品）。三大功能：
+- **P0 上传音视频转写**：上传 → 转写逐字稿（说话人 + 时间戳）→ 手动生成 AI 摘要 → 导出 MD/TXT/SRT/VTT
+- **P1 播客订阅**：搜索/订阅节目（Apple Podcasts + 小宇宙链接）→ 同步 shownotes → 按需获取单集文字稿 → 导出 Obsidian
+- **P2 实时转录**（未做）
 
-```
-Upload audio / browser recording → ASR transcription → view verbatim transcript → export Markdown/TXT/SRT/VTT
-```
+所有 AI 能力（ASR / LLM 总结）走**公有云 API，按能力维度配置 Provider**，不做本地模型部署。首发：百炼 Fun-ASR + qwen。里程碑见 `PROGRESS.md`（M1–M11）。
 
-Removed from the main line (see `PROGRESS.md`): 6 scene templates, automatic LLM document generation, scene-specific document panels, folder/tag/timeline library views, full-text search, settings page, and DOCX/PDF export. Legacy DB tables (`documents`, `folders`, `tags`) and the `scene_type` column are intentionally retained to avoid a destructive migration; they are no longer surfaced in the product.
+## 命令
 
-## Commands
-
-### Docker (primary development method)
 ```bash
-docker-compose up --build        # Start all 5 services (postgres, redis, backend, celery-worker, frontend)
-docker-compose up -d             # Start detached
-docker-compose logs -f backend   # Tail backend logs
-docker-compose logs -f celery-worker  # Tail celery logs (ASR processing happens here)
-docker-compose exec backend alembic upgrade head   # Run migrations manually
-docker-compose exec backend alembic revision --autogenerate -m "description"  # Create new migration
+# 后端（本地）—— 起后端/转写必须 unset 代理（直连阿里云）
+cd backend && pip install -e ".[dev]"
+export DATABASE_URL="postgresql+asyncpg://ysh@localhost/listenwise"   # alembic env.py 不读 .env
+env -u HTTP_PROXY -u HTTPS_PROXY python3 -m alembic upgrade head
+env -u HTTP_PROXY -u HTTPS_PROXY ASR_PROVIDER=fun_asr python3 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+pytest
+# 前端
+cd frontend && npm install && npm run dev    # 3000
+npm run build                                 # 上线前必跑（抓 SSR/类型错）
 ```
 
-### Backend (local development)
-```bash
-cd backend
-pip install -e ".[dev]"
-alembic upgrade head
-uvicorn app.main:app --reload --port 8000
-celery -A app.celery_app worker --loglevel=info --concurrency=2  # In separate terminal
-pytest                           # Run tests
-pytest -x tests/test_foo.py      # Run single test file
-```
+## 架构与关键决策
 
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev     # Dev server on port 3000
-npm run build   # Production build
-npm run lint    # ESLint
-```
+转写流：`上传 → 本地临时 → BackgroundTasks(run_transcription) → OssUtils 上传阿里云 OSS → Fun-ASR REST 转写 → 存 Transcript → done → 转存音频到 Supabase Storage + 删本地临时`
 
-## Architecture
+- **转写跑在 FastAPI BackgroundTasks，不是 Celery**（Render 免费实例无 Redis/worker）。核心是 `tasks/transcribe.py` 的 `run_transcription()`，Celery task 仅备用。
+- **Provider 配置**：`services/provider_config.py` 按能力（asr/llm）resolve，DB（`model_provider_configs`）优先、`.env` 兜底。
+- **AI 摘要**：`POST /recordings/{id}/summary` 手动触发，qwen 生成 tldr + 带时间戳 outline（线程池跑避免阻塞）。
+- **访问口令**：`ACCESS_PASSCODE` 非空时所有 `/api`（除 health）需 `X-Access-Passcode` 头。
+- **音频持久化**：转写完把本地音频转存 Supabase Storage、`file_url` 变 public URL（解决 Render 临时盘部署即清）；未配 Supabase 时存本地（dev）。
 
-```
-Recording Upload → FastAPI → Save file → Celery task (transcribe_recording)
-                                              ↓
-                                    ASR (DashScope Paraformer-v2)
-                                              ↓
-                                    Save Transcript to DB → status: done
-```
+## 关键 gotchas（容易踩）
 
-There is no longer an LLM document-generation step. Transcription completes straight to `done`.
+- **本地起后端/转写必须 `env -u HTTP_PROXY -u HTTPS_PROXY`**，否则连不上阿里云。
+- **测试连后端用 `127.0.0.1:8000` 不要 `localhost`**（localhost 可能解析到 IPv6、撞别的占用进程）。
+- **Fun-ASR 仅单声道支持说话人分离**；解析读 `speaker_id`（不是 `spk_id`）。
+- **Fun-ASR 下载不了海外 URL** —— 播客音频地址须国内可访问（小宇宙 CDN 可）。
+- **`DATABASE_URL` 用 `postgresql+asyncpg://`**；密码特殊字符要 URL 编码（`#`→`%23`）。
+- **`SUPABASE_URL` 须带 `https://`**（代码已容错自动补）。
+- 详情页/导出用 `speaker_labels`（`{"A":"徐涛"}`）映射说话人真名。
 
-### Recording Status Flow
-`uploading → transcribing → done` (or `failed` at any step). The `analyzing` enum value is kept in `models/base.py` for backward compatibility with historical rows but is no longer produced.
+## 设计系统
 
-### Backend (`backend/app/`)
+Claude 文学沙龙风格（M9）：羊皮纸 `#f5f4ed` + 象牙卡 `#faf9f5` + 陶土 `#c96442` + 衬线标题 + ring 阴影。token 在 `app/globals.css`（保留变量名让 Tailwind class 自动跟随），改色改这里。
 
-- **`main.py`** — FastAPI app, CORS, static file serving for `/uploads`, router registration (`recordings`, `stats`, `export`)
-- **`config.py`** — Pydantic Settings from `.env`. When `dashscope_api_key` is empty, ASR falls back to mock data
-- **`celery_app.py`** — Celery config with Redis broker, autodiscovers `app.tasks`
-- **`database.py`** — Async SQLAlchemy engine (asyncpg). `sync_db.py` provides sync sessions for Celery tasks
-- **`models/`** — SQLAlchemy 2.0 models: Recording, Transcript (JSONB segments), User. Legacy Folder/Tag models retained but unused by the product. (Document model removed.)
-- **`api/`** — Routes: `recordings.py` (CRUD + upload + stats), `export.py` (Markdown/TXT/SRT/VTT)
-- **`services/asr.py`** — DashScope Paraformer-v2 integration. Uses `OssUtils.upload()` for file upload + REST API with `X-DashScope-OssResourceResolve: enable` header (SDK's `Transcription.async_call()` doesn't add this header, which is why we use REST)
-- **`services/export.py`** — Renders a Transcript's segments to Markdown / plain text / SRT / VTT
-- **`tasks/transcribe.py`** — Celery task: ASR → save transcript → mark recording `done`
+## 部署
 
-### Frontend (`frontend/src/`)
+公网受控 Demo：前端 Vercel + 后端 Render + 库 Supabase + 阿里云 ASR。完整步骤+踩坑见 `docs/deployment/部署实战手册.md`。push main 自动触发 Vercel + Render 部署（蓝绿，免费实例有切换 downtime）。
 
-- **Next.js 16** with App Router, React 19, Tailwind CSS 4
-- **`next.config.ts`** — `output: "standalone"`, rewrites `/api/*` and `/uploads/*` to backend
-- **`app/globals.css`** — Design tokens as CSS variables (`--accent: #1e64ff` 听悟蓝, etc.) mapped to Tailwind via `@theme inline`
-- **Pages:** `app/page.tsx` (home — "我的内容" transcript list with top search), `app/upload/` (new transcription), `app/recordings/[id]/` (transcript detail + export)
-- **`lib/api.ts`** — Axios client, all API types and functions. `getRecordingDetail()` fetches recording + transcript
-- **`components/AppSidebar.tsx`** — App-level navigation sidebar
-- **`components/AudioPlayer.tsx`** — Native HTML5 `<audio>` with RAF-based time sync, custom progress bar, variable speed
-- **`components/TranscriptPanel.tsx`** — Transcript display synced with audio playback, click-to-seek
-- **`components/WebRecorder.tsx`** — In-browser recording capture
-- **`components/FileUploader.tsx`** — Audio file upload
+## Legacy（勿动）
 
-### Key Data Relationships
-
-- Recording 1:1 Transcript (segments as JSONB array of `{start, end, speaker, text}`)
-- Recording carries a legacy `scene_type` column (NOT NULL); uploads hardcode `SceneType.study_recording` since users no longer pick a scene
-- Legacy Recording N:1 Folder and Recording M:N Tag relationships remain in the schema but are not used by the product
-
-## DashScope ASR Integration Notes
-
-The ASR flow in `asr.py` has a non-obvious design: we use the SDK for file upload but REST API for the transcription call. This is because:
-1. `dashscope.Files.upload()` returns `dashscope://` URLs — Transcription API doesn't support this protocol
-2. `OssUtils.upload()` returns `oss://` URLs — correct format, but the SDK's `Transcription.async_call()` doesn't add the required `X-DashScope-OssResourceResolve` header
-3. Solution: `OssUtils.upload()` (SDK) + REST API POST with both `X-DashScope-Async: enable` and `X-DashScope-OssResourceResolve: enable` headers
-
-## Roadmap
-
-Next direction (see `docs/research/2026-06-02-asr-provider-research.md`) is to abstract ASR into a provider layer: `local_whisper`/`local_funasr` (offline, the core product bet), low-cost cloud (Aliyun Paraformer), product-grade meeting transcription (Tongyi Tingwu / Volcengine Doubao, with diarization + timestamps), and eventually realtime streaming (partial/final).
-
-## Environment
-
-Backend reads `.env` (local) or `.env.docker` (container). The only required external key is `DASHSCOPE_API_KEY` — without it, ASR falls back to mock data, which is sufficient for frontend development.
-
-The `file_url` stored in DB uses the container path `/app/uploads/...`. The frontend transforms this to `/uploads/...` via string replace, then Next.js proxies to the backend.
+`documents`/`folders`/`tags` 表、Recording 的 `scene_type` 列（NOT NULL，上传硬编码 `study_recording`）、`analyzing` 枚举 —— 历史遗留，产品不用，保留避免破坏性迁移。
 
 ## Language
 
-This is a Chinese-facing product. All UI text and documentation are in Chinese. Code comments and variable names are in English.
+中文产品：UI 文案与文档全中文；代码注释与变量名用英文。
