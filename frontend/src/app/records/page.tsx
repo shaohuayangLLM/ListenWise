@@ -144,7 +144,11 @@ function RecordsContent() {
     setError(null);
     try {
       const result = await exportRecordingToObsidian(rec.id);
-      setMessage(`已导出到 Obsidian：${result.relative_path}`);
+      setMessage(
+        result.mode === "written"
+          ? `已导出到 Obsidian：${result.relative_path}`
+          : `已下载 Obsidian 文件：${result.filename}（拖进你的 vault 即可）`
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "导出到 Obsidian 失败"

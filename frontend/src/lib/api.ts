@@ -116,12 +116,31 @@ export async function deleteRecording(id: number): Promise<void> {
   await api.delete(`/recordings/${id}`);
 }
 
+export interface ObsidianExportResult {
+  mode: "written" | "download";
+  relative_path?: string; // mode=written：已写入 vault 的相对路径
+  filename?: string; // mode=download：建议文件名
+  content?: string; // mode=download：md 内容
+}
+
 export async function exportRecordingToObsidian(
   id: number
-): Promise<{ path: string; relative_path: string }> {
-  const { data } = await api.post<{ path: string; relative_path: string }>(
+): Promise<ObsidianExportResult> {
+  const { data } = await api.post<ObsidianExportResult>(
     `/recordings/${id}/export/obsidian`
   );
+  // 生产无本机 vault：返回内容，前端触发下载
+  if (data.mode === "download" && data.content && data.filename) {
+    const blob = new Blob([data.content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = data.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
   return data;
 }
 

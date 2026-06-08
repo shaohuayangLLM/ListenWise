@@ -33,6 +33,13 @@ def _published_date(recording: Recording, episode: PodcastEpisode | None) -> str
     return value.strftime("%Y-%m-%d")
 
 
+def _ts_hms(ts) -> str:
+    """Obsidian 文字稿时间戳：始终 HH:MM:SS（贴齐参考格式）。"""
+    h, rem = divmod(int(ts or 0), 3600)
+    m, s = divmod(rem, 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
 def _segment_lines(segments: list | dict | None, full_text: str | None) -> list[str]:
     if isinstance(segments, dict):
         segments = segments.get("segments", [])
@@ -41,7 +48,7 @@ def _segment_lines(segments: list | dict | None, full_text: str | None) -> list[
         for segment in segments:
             if not isinstance(segment, dict):
                 continue
-            timestamp = _format_timestamp(segment.get("start", 0))
+            timestamp = _ts_hms(segment.get("start", 0))
             speaker = segment.get("speaker")
             text = segment.get("text", "")
             prefix = f"**[{timestamp}]**"
@@ -62,37 +69,22 @@ def _frontmatter(
         if episode and episode.episode_url
         else recording.source_url
     )
-    lines = [
-        "---",
-        f"title: {_yaml_value(recording.title)}",
-        'source: "listenwise"',
-        f"recording_id: {recording.id}",
-        f"source_type: {_yaml_value(recording.source.value)}",
-        f"status: {_yaml_value('已转录')}",
-        f"created: {_yaml_value(recording.created_at.isoformat())}",
-        f"date: {_yaml_value(_published_date(recording, episode))}",
-        f"duration: {_format_duration_minutes(recording.duration)}",
-    ]
+    lines = ["---", f"title: {_yaml_value(recording.title)}"]
     if show:
-        lines.extend(
-            [
-                f"podcast: {_yaml_value(show.title)}",
-                f"podcast_author: {_yaml_value(show.author)}",
-            ]
-        )
+        lines.append(f"podcast: {_yaml_value(show.title)}")
+        if show.author:
+            lines.append(f"hosts: [{_yaml_value(show.author)}]")
+    lines.append(f"date: {_yaml_value(_published_date(recording, episode))}")
+    lines.append(f"duration: {_format_duration_minutes(recording.duration)}")
     if source_url:
         lines.append(f"source_url: {_yaml_value(source_url)}")
-    if episode and episode.audio_url:
-        lines.append(f"audio_url: {_yaml_value(episode.audio_url)}")
-    if show and show.feed_url:
-        lines.append(f"feed_url: {_yaml_value(show.feed_url)}")
-    if transcript.summary_model:
-        lines.append(f"summary_model: {_yaml_value(transcript.summary_model)}")
-    if transcript.summary_at:
-        lines.append(f"summary_at: {_yaml_value(transcript.summary_at.isoformat())}")
-    lines.extend(["tags:", f"  - {_yaml_value('ListenWise')}"])
+    lines.append(f"status: {_yaml_value('已转录')}")
+    lines.append("tags:")
     if show:
         lines.append(f"  - {_yaml_value(f'播客/{show.title}')}")
+    else:
+        lines.append(f"  - {_yaml_value('ListenWise')}")
+    lines.append("cards: []")
     lines.extend(["---", ""])
     return "\n".join(lines)
 
@@ -182,11 +174,11 @@ def _render_markdown(
         f"# {recording.title}",
         "",
         *_info_section(recording, episode),
-        *_ai_section(transcript),
         *_shownotes_section(episode),
         "## 文字稿",
         "",
         *_segment_lines(transcript.segments, transcript.full_text),
+        *_ai_section(transcript),
     ]
     return "\n".join(lines)
 
@@ -195,27 +187,28 @@ def export_recording_to_obsidian(
     recording: Recording,
     transcript: Transcript,
     episode: PodcastEpisode | None = None,
-) -> dict[str, str]:
-    vault = Path(settings.obsidian_vault_path).expanduser().resolve()
-    if not settings.obsidian_vault_path or not vault.exists():
-        raise ValueError("未配置可用的 Obsidian vault 路径")
-
-    relative_dir = Path(settings.obsidian_export_dir)
-    if relative_dir.is_absolute() or ".." in relative_dir.parts:
-        raise ValueError("Obsidian 导出目录配置不合法")
-
-    target_dir = (vault / relative_dir).resolve()
-    if vault not in target_dir.parents and target_dir != vault:
-        raise ValueError("Obsidian 导出目录不在 vault 内")
-    target_dir.mkdir(parents=True, exist_ok=True)
-
+) -> dict:
+    """本地部署（配了 vault）→ 直接写入 vault；生产（无本机 vault）→ 返回内容供前端下载。"""
+    content = _render_markdown(recording, transcript, episode)
     date_prefix = recording.created_at.strftime("%Y-%m-%d")
     filename = f"{date_prefix} - {_safe_filename(recording.title)}.md"
-    target = target_dir / filename
 
-    target.write_text(_render_markdown(recording, transcript, episode), encoding="utf-8")
+    if settings.obsidian_vault_path:
+        vault = Path(settings.obsidian_vault_path).expanduser().resolve()
+        relative_dir = Path(settings.obsidian_export_dir)
+        if (
+            vault.exists()
+            and not relative_dir.is_absolute()
+            and ".." not in relative_dir.parts
+        ):
+            target_dir = (vault / relative_dir).resolve()
+            if vault in target_dir.parents or target_dir == vault:
+                target_dir.mkdir(parents=True, exist_ok=True)
+                target = target_dir / filename
+                target.write_text(content, encoding="utf-8")
+                return {
+                    "mode": "written",
+                    "relative_path": str(target.relative_to(vault)),
+                }
 
-    return {
-        "path": str(target),
-        "relative_path": str(target.relative_to(vault)),
-    }
+    return {"mode": "download", "filename": filename, "content": content}
