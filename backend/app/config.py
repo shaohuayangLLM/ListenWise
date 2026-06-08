@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     # CORS 允许来源（逗号分隔）；生产填 Vercel 前端域名
     cors_origins: str = "http://localhost:3000"
 
+    # Supabase Storage（音频持久化）：转写完成后把本地音频转存上去，释放 Render 临时盘。
+    # 未配置则保持本地存储（dev）。
+    supabase_url: str = ""           # 形如 https://xxxx.supabase.co
+    supabase_service_key: str = ""   # service_role key（仅后端用，勿暴露前端）
+    supabase_bucket: str = "recordings"
+
     # 本地 Obsidian 导出。生产环境若没有挂载本机 vault，可留空禁用。
     obsidian_vault_path: str = "/Users/ysh/Manual Library/Obsidian/Knowledge"
     obsidian_export_dir: str = "ListenWise"

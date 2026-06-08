@@ -61,6 +61,29 @@ def run_transcription(recording_id: int):
         db.commit()
         logger.info("Recording %d status -> done", recording_id)
 
+        # 6. 持久化音频到 Supabase Storage，释放 Render 临时盘（仅本地上传文件）
+        file_url = recording.file_url or ""
+        if file_url and not file_url.startswith(("http://", "https://")):
+            try:
+                import os
+
+                from app.services.storage import upload_to_supabase_sync
+
+                public_url = upload_to_supabase_sync(file_url)
+                if public_url:
+                    recording.file_url = public_url
+                    db.commit()
+                    try:
+                        os.remove(file_url)
+                    except OSError:
+                        pass
+                    logger.info(
+                        "Recording %d audio persisted to Supabase Storage",
+                        recording_id,
+                    )
+            except Exception as e:  # noqa: BLE001 - 持久化失败不影响转写结果
+                logger.warning("Audio persist failed for %d: %s", recording_id, e)
+
     except Exception as e:
         logger.exception("Transcription failed for recording %d: %s", recording_id, e)
         recording = db.query(Recording).filter(Recording.id == recording_id).first()

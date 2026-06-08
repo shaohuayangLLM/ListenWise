@@ -2,9 +2,35 @@ import os
 import uuid
 from pathlib import Path
 
+import httpx
 from fastapi import UploadFile
 
+from app.config import settings
+
 UPLOADS_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
+
+
+def upload_to_supabase_sync(local_path: str) -> str | None:
+    """把本地音频上传到 Supabase Storage，返回 public URL；未配置则返回 None。"""
+    if not (settings.supabase_url and settings.supabase_service_key):
+        return None
+    filename = os.path.basename(local_path)
+    with open(local_path, "rb") as f:
+        content = f.read()
+    base = settings.supabase_url.rstrip("/")
+    bucket = settings.supabase_bucket
+    resp = httpx.post(
+        f"{base}/storage/v1/object/{bucket}/{filename}",
+        headers={
+            "Authorization": f"Bearer {settings.supabase_service_key}",
+            "Content-Type": "application/octet-stream",
+            "x-upsert": "true",
+        },
+        content=content,
+        timeout=180,
+    )
+    resp.raise_for_status()
+    return f"{base}/storage/v1/object/public/{bucket}/{filename}"
 
 
 async def save_file(file: UploadFile, recording_id: int) -> str:
