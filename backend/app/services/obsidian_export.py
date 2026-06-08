@@ -6,7 +6,8 @@ from app.models.podcast import PodcastEpisode
 from app.models.recording import Recording
 from app.models.transcript import Transcript
 
-_FILENAME_UNSAFE = re.compile(r'[\\/:*?"<>|\n\r\t]+')
+# 含 Obsidian wikilink 特殊字符（# ^ [ ]）—— 文件名带它们会导致点击链接时新建空笔记
+_FILENAME_UNSAFE = re.compile(r'[\\/:*?"<>|\n\r\t#\^\[\]]+')
 
 
 def _safe_filename(value: str) -> str:
