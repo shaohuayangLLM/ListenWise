@@ -149,12 +149,13 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - 单集详情页 tab：Shownotes 移到前面并默认显示。
 - preview 预览页与已订阅节目详情：单集列表支持**单集级「获取文字稿」**（preview 订阅前即“导入这一集 + 转写”，无需订阅整个节目）。
 
-### ✅ M11 — 说话人重命名 + 音频持久化 + 定时清理（2026-06-08）
+### ✅ M11 — 说话人重命名 + 音频持久化 + 定时清理 + Obsidian 导出修复（2026-06-08）
 
 - **说话人重命名/重识别**（P0 模块4）：详情页说话人 chip 点名字改真名；后端 `PATCH /recordings/{id}/transcript/speakers` 更新 `speaker_labels`（空值恢复默认）。逐字稿与图例同步显示真名。
 - **音频持久化到 Supabase Storage**：转写完成后把本地音频转存 Supabase Storage（`file_url` 变 public URL）+ 删本地临时，解决 Render 临时盘部署/重启丢音频。踩坑：`SUPABASE_URL` 须带 `https://`（已代码容错）、Render 蓝绿部署切换时机。⚠️ Supabase Free 对象存储仅 **1 GB**。
 - **定时清理（piggyback）**：每次转写完成后顺带删 30 天前的上传音频文件（保留记录+转写稿，`file_url` 置空），Render 免费实例无 cron 的零配置方案。
 - **CLAUDE.md 重写**（`/init`）：从 M2 过时版（narrowed 单流程/DashScope/Celery）→ 反映当前架构 + 6 条关键 gotchas，112→58 行。
+- **Obsidian 导出修复**：生产 Render 无本机 vault → 之前报 400「未配置 vault」；改为本地部署写 vault、生产返回 md 内容供浏览器下载。md 格式贴齐用户参考（frontmatter 精简 + 时间戳统一 `HH:MM:SS` + AI 解读移到文字稿之后，保留说话人/Shownotes）；文件名去掉 Obsidian wikilink 特殊字符 `# ^ [ ]`（避免点击链接新建空笔记）。
 
 ---
 
