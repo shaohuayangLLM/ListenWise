@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     # LLM 总结（OpenAI 兼容；默认走百炼兼容端点）
     llm_api_key: str = ""
     llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    llm_model: str = "qwen-plus"
+    llm_model: str = "qwen-turbo"
 
     # 加密主密钥（Fernet，用于加密 DB 中 provider 的 api_key）
     # 空则回退到不加密的 .env 配置（开发态）；生产必须设置
