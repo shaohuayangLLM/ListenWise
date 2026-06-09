@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Mic, Square, Pause, Play } from "lucide-react";
 
 interface WebRecorderProps {
-  onRecordingComplete: (file: File) => void;
+  onRecordingComplete: (file: File, durationSec: number) => void;
   onCancel: () => void;
 }
 
@@ -32,6 +32,7 @@ export default function WebRecorder({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const durationRef = useRef(0);
 
   const cleanup = useCallback(() => {
     if (timerRef.current) {
@@ -111,15 +112,19 @@ export default function WebRecorder({
         const file = new File([blob], `recording_${ts}.webm`, {
           type: mimeType,
         });
-        onRecordingComplete(file);
+        onRecordingComplete(file, durationRef.current);
       };
 
       recorder.start(1000); // collect data every 1s
       setState("recording");
       setDuration(0);
+      durationRef.current = 0;
 
       timerRef.current = setInterval(() => {
-        setDuration((d) => d + 1);
+        setDuration((d) => {
+          durationRef.current = d + 1;
+          return d + 1;
+        });
       }, 1000);
 
       updateVolume();
@@ -154,7 +159,10 @@ export default function WebRecorder({
     setState("recording");
 
     timerRef.current = setInterval(() => {
-      setDuration((d) => d + 1);
+      setDuration((d) => {
+        durationRef.current = d + 1;
+        return d + 1;
+      });
     }, 1000);
 
     updateVolume();

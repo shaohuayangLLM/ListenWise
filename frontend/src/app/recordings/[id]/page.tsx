@@ -10,6 +10,7 @@ import {
   FileDown,
   Loader2,
   Pencil,
+  PenLine,
   RefreshCw,
   Sparkles,
   Users,
@@ -22,10 +23,20 @@ import {
   getRecordingDetail,
   mediaUrl,
   regenerateSummary,
+  updateRecording,
   updateSpeakerLabels,
   type RecordingDetail,
   type TranscriptSegment,
 } from "@/lib/api";
+
+function tabClass(active: boolean): string {
+  return (
+    "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors " +
+    (active
+      ? "border-accent text-accent"
+      : "border-transparent text-text-muted hover:text-text")
+  );
+}
 
 const EXPORT_FORMATS = [
   { format: "md", label: "Markdown" },
@@ -92,6 +103,9 @@ export default function RecordingDetailPage({
   const [exportError, setExportError] = useState<string | null>(null);
   const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [activeTab, setActiveTab] = useState<"transcript" | "notes">("transcript");
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const playerRef = useRef<AudioPlayerHandle>(null);
 
   useEffect(() => {
@@ -100,6 +114,22 @@ export default function RecordingDetailPage({
       .catch(() => setError("无法加载录音详情"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // 笔记草稿随记录加载/外部更新同步
+  useEffect(() => {
+    setNoteDraft(recording?.note ?? "");
+  }, [recording?.note]);
+
+  const handleSaveNote = async () => {
+    if (!recording) return;
+    setSavingNote(true);
+    try {
+      await updateRecording(recording.id, { note: noteDraft });
+      setRecording((prev) => (prev ? { ...prev, note: noteDraft } : prev));
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   const handleSeek = (time: number) => {
     playerRef.current?.seekTo(time);
@@ -456,15 +486,48 @@ export default function RecordingDetailPage({
         </div>
       )}
 
-      {/* Transcript */}
-      <div className="mt-4" style={{ height: "calc(100vh - 360px)" }}>
-        <TranscriptPanel
-          segments={transcript?.segments || []}
-          wordCount={transcript?.word_count || 0}
-          currentTime={currentTime}
-          onSeek={handleSeek}
-          speakerLabels={speakerLabels}
-        />
+      {/* 转录文本 / 我的笔记 —— tab 切换，笔记可随时二次编辑 */}
+      <div className="mt-4 flex items-center gap-1 border-b border-border">
+        <button onClick={() => setActiveTab("transcript")} className={tabClass(activeTab === "transcript")}>
+          文字稿
+        </button>
+        <button onClick={() => setActiveTab("notes")} className={tabClass(activeTab === "notes")}>
+          <PenLine size={14} />
+          我的笔记
+        </button>
+      </div>
+
+      <div className="mt-3" style={{ height: "calc(100vh - 400px)" }}>
+        {activeTab === "transcript" ? (
+          <TranscriptPanel
+            segments={transcript?.segments || []}
+            wordCount={transcript?.word_count || 0}
+            currentTime={currentTime}
+            onSeek={handleSeek}
+            speakerLabels={speakerLabels}
+          />
+        ) : (
+          <div className="flex h-full flex-col rounded-xl border border-border bg-surface p-5 shadow-ring shadow-soft">
+            <textarea
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              placeholder="边听边记笔记，随时补充…每行一条。AI 摘要会结合你的笔记和转写稿。"
+              className="flex-1 w-full resize-none bg-transparent text-[15px] leading-[1.9] text-text outline-none placeholder:text-text-muted/60"
+            />
+            <div className="mt-2 flex items-center justify-end gap-3 border-t border-border pt-3">
+              {noteDraft !== (recording.note ?? "") && (
+                <span className="text-xs text-text-muted">未保存</span>
+              )}
+              <button
+                onClick={handleSaveNote}
+                disabled={savingNote || noteDraft === (recording.note ?? "")}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-ring transition-all duration-200 hover:bg-accent-hover disabled:opacity-40"
+              >
+                {savingNote ? "保存中…" : "保存笔记"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

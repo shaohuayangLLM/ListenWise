@@ -48,6 +48,7 @@ async def upload_recording(
     file: UploadFile,
     title: str = Form(...),
     note: str | None = Form(None),
+    source: str = Form("upload"),
     db: AsyncSession = Depends(get_db),
 ):
     # Validate file extension
@@ -73,7 +74,11 @@ async def upload_recording(
         # Legacy column retained for existing schema; product no longer asks users
         # to choose a scene before transcription.
         scene_type=SceneType.study_recording,
-        source=RecordingSource.upload,
+        source=(
+            RecordingSource.realtime
+            if source == "realtime"
+            else RecordingSource.upload
+        ),
         status=RecordingStatus.uploading,
         file_url="",
         original_filename=file.filename or "unknown",
@@ -173,6 +178,8 @@ async def update_recording(
         recording.title = title[:500]
     if body.is_favorite is not None:
         recording.is_favorite = body.is_favorite
+    if body.note is not None:
+        recording.note = body.note
 
     await db.commit()
     await db.refresh(recording)
@@ -405,7 +412,11 @@ def _generate_summary_sync(recording_id: int) -> dict:
         if not (llm and llm.api_key):
             return {"ok": False, "error": "未配置大模型，请先在设置中配置"}
 
-        result = summarize(transcript.segments, llm)
+        recording = (
+            db.query(Recording).filter(Recording.id == recording_id).first()
+        )
+        notes = recording.note if recording else None
+        result = summarize(transcript.segments, llm, notes=notes)
         transcript.summary = result.get("tldr", "")
         transcript.outline = result.get("outline", [])
         transcript.summary_model = llm.model

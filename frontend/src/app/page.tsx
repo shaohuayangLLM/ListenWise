@@ -153,9 +153,9 @@ export default function HomePage() {
 
       {/* ===== 3 张场景卡 ===== */}
       <section className="fade-up fade-up-1 grid gap-[18px] py-2 md:grid-cols-3">
-        {/* 卡 1：开启实时记录（陶土感） */}
+        {/* 卡 1：会议录音（陶土感） */}
         <Link
-          href="/upload"
+          href="/record"
           className="group relative flex min-h-[256px] flex-col overflow-hidden rounded-xl border border-border bg-[linear-gradient(160deg,#faf9f5_0%,#f4f1ea_70%,#ece8dd_100%)] p-7 shadow-ring shadow-soft transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-1 hover:border-[rgba(201,100,66,0.3)] hover:shadow-[0_10px_30px_rgba(20,20,19,0.08)]"
         >
           <span className="absolute right-[18px] top-[18px] rounded-lg bg-accent px-3 py-1 text-[11.5px] font-semibold tracking-wide text-white">
@@ -191,8 +191,8 @@ export default function HomePage() {
             开启实时记录
           </div>
           <div className="relative z-10 text-[13px] font-medium leading-[1.7] text-text-dim">
-            <p>实时语音转文字</p>
-            <p>同步翻译，智能总结要点</p>
+            <p>打开即录，录完自动转写</p>
+            <p>区分发言人，智能总结要点</p>
           </div>
         </Link>
 

@@ -5,6 +5,7 @@
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `main`（已推 GitHub）
 **最后更新：** 2026-06-08
+**最近：** M12 会议录音（专注记笔记）+ 笔记二次编辑融入 AI 摘要 + 记录来源类型（实时记录/本地音频/播客）。本地完成待 push。
 
 ---
 
@@ -156,6 +157,14 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **定时清理（piggyback）**：每次转写完成后顺带删 30 天前的上传音频文件（保留记录+转写稿，`file_url` 置空），Render 免费实例无 cron 的零配置方案。
 - **CLAUDE.md 重写**（`/init`）：从 M2 过时版（narrowed 单流程/DashScope/Celery）→ 反映当前架构 + 6 条关键 gotchas，112→58 行。
 - **Obsidian 导出修复**：生产 Render 无本机 vault → 之前报 400「未配置 vault」；改为本地部署写 vault、生产返回 md 内容供浏览器下载。md 格式贴齐用户参考（frontmatter 精简 + 时间戳统一 `HH:MM:SS` + AI 解读移到文字稿之后，保留说话人/Shownotes）；文件名去掉 Obsidian wikilink 特殊字符 `# ^ [ ]`（避免点击链接新建空笔记）。
+
+### ✅ M12 — 会议录音（专注记笔记）+ 笔记融入 AI + 来源类型（2026-06-08）
+
+- **会议录音页 `/record`（专注记笔记）**：首页卡片「开启实时记录」+ 顶部「录音」按钮 → `/record`。重做为「会议室记笔记」气质——**笔记白板当主角铺满**、录音退成右上角克制小胶囊（录音中/计时/暂停/完成）、**进页面自动开始录音**（点「开始会议」直接进录音态，无麦克风权限则回退手动按钮）。录音逻辑抽成 `hooks/useRecorder.ts`（UI/逻辑解耦），`WebRecorder` 仍供 `/upload`。
+- **录完手动转录**：录完进就绪态——试听播放器 + 会议名 + **手动「开始转录」** + 重新录制（不自动转，省额度、可先确认）。
+- **笔记二次编辑**：详情页转录区改 tab「**文字稿 / 我的笔记**」；任何记录（会议录音 / 本地音频）再听时都能在「我的笔记」tab 写/改笔记 → 手动保存。后端 `RecordingUpdate` + `PATCH /recordings/{id}` 加 `note`（复用既有 `note` TEXT 列，零迁移）。
+- **AI 摘要结合笔记**：`summarize(segments, provider, notes)` 把用户笔记注入 prompt，让 tldr/章节**呼应用户当场记下的关注点**，再用逐字稿补全。
+- **来源类型**：`RecordingSource`（upload/podcast/realtime）贯通到 `RecordingResponse`；`/upload` endpoint 加 `source` 参数，`/record` 标 `realtime`、本地上传 `upload`、播客 `podcast`。「我的记录」加来源筛选 chips（全部/实时记录/本地音频/播客）+ 每条来源标签。
 
 ---
 

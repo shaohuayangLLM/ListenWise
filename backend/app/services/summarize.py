@@ -26,9 +26,17 @@ _SUMMARY_PROMPT = """你是播客/会议内容分析助手。下面是一段带�
 - **章节必须在时间轴上均匀覆盖全程**：相邻章节起始时间间隔一般不超过 8 分钟，绝不允许中间留下超过 10 分钟没有章节的空档；逐字稿结尾部分也要有对应章节。
 - start_sec 必须引用逐字稿中真实出现的时间戳，禁止编造，且必须严格递增。
 - 只输出 JSON，不要任何额外文字或 markdown 代码块标记。
-
+{notes_block}
 逐字稿：
 {transcript}
+"""
+
+
+_NOTES_BLOCK = """
+用户在会议中手记的要点（代表 ta 当场最关注的内容）：
+{notes}
+
+请**优先呼应这些笔记要点**：把用户记下的关注点作为 tldr 和章节划分的重心，再用逐字稿补全细节、佐证或纠正笔记。
 """
 
 
@@ -56,8 +64,15 @@ def _extract_json(content: str) -> dict:
     return json.loads(content)
 
 
-def summarize(segments: list[dict], provider: ResolvedProvider) -> dict:
-    """调用 LLM 生成 summary（tldr + 带时间戳 outline）。"""
+def summarize(
+    segments: list[dict],
+    provider: ResolvedProvider,
+    notes: str | None = None,
+) -> dict:
+    """调用 LLM 生成 summary（tldr + 带时间戳 outline）。
+
+    notes：用户在会议中手记的笔记，存在时融入 prompt，让摘要呼应用户关注点。
+    """
     if not segments:
         return {"tldr": "", "outline": []}
 
@@ -66,8 +81,9 @@ def summarize(segments: list[dict], provider: ResolvedProvider) -> dict:
     minutes = max(1, duration_sec // 60)
     # 约每 5 分钟一节，限制在 3~20 节区间
     target = min(20, max(3, round(minutes / 5)))
+    notes_block = _NOTES_BLOCK.format(notes=notes.strip()) if notes and notes.strip() else ""
     prompt = _SUMMARY_PROMPT.format(
-        transcript=transcript, minutes=minutes, target=target
+        transcript=transcript, minutes=minutes, target=target, notes_block=notes_block
     )
     base = (provider.base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1").rstrip("/")
 

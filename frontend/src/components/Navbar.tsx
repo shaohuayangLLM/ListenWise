@@ -36,7 +36,7 @@ export default function Navbar() {
 
         <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
           <Link
-            href="/upload"
+            href="/record"
             className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg bg-accent px-3 text-[14px] font-medium text-white shadow-ring transition-colors duration-200 hover:bg-accent-hover md:px-4"
           >
             <Mic size={17} />

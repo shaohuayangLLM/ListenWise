@@ -50,6 +50,19 @@ function statusLabel(status: string): string {
   return labels[status] || status;
 }
 
+const SOURCE_FILTERS = [
+  { key: "all", label: "全部" },
+  { key: "realtime", label: "实时记录" },
+  { key: "upload", label: "本地音频" },
+  { key: "podcast", label: "播客" },
+] as const;
+
+const SOURCE_LABELS: Record<string, string> = {
+  realtime: "实时记录",
+  upload: "本地音频",
+  podcast: "播客",
+};
+
 function RecordsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,6 +74,7 @@ function RecordsContent() {
   const [editValue, setEditValue] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
   useEffect(() => {
     getRecordings(1, 100)
@@ -80,6 +94,10 @@ function RecordsContent() {
       items = items.filter((item) => item.status === status);
     }
 
+    if (sourceFilter !== "all") {
+      items = items.filter((item) => item.source === sourceFilter);
+    }
+
     if (query) {
       const lowered = query.toLowerCase();
       items = items.filter((item) =>
@@ -91,7 +109,7 @@ function RecordsContent() {
     return [...items].sort(
       (a, b) => Number(b.is_favorite) - Number(a.is_favorite)
     );
-  }, [query, recordings, status]);
+  }, [query, recordings, status, sourceFilter]);
 
   const patchLocal = (id: number, patch: Partial<Recording>) =>
     setRecordings((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -167,6 +185,24 @@ function RecordsContent() {
             <p className="mt-1.5 text-[14px] text-text-muted">搜索：{query}</p>
           )}
         </div>
+      </div>
+
+      {/* 来源类型筛选：实时记录 / 本地音频 / 播客 */}
+      <div className="flex items-center gap-2 border-b border-border px-5 py-3 md:px-8">
+        {SOURCE_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setSourceFilter(f.key)}
+            className={
+              "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors " +
+              (sourceFilter === f.key
+                ? "bg-accent text-white shadow-ring"
+                : "bg-surface-2 text-text-muted hover:text-text")
+            }
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {(message || error) && (
@@ -254,10 +290,14 @@ function RecordsContent() {
                         </span>
                       </div>
                     )}
-                    <div className="mt-1.5 text-[13px] text-text-muted">
-                      {formatDuration(recording.duration)}
-                      {recording.status !== "done" &&
-                        ` · ${statusLabel(recording.status)}`}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px] text-text-muted">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-text-dim">
+                        {SOURCE_LABELS[recording.source] ?? recording.source}
+                      </span>
+                      <span>{formatDuration(recording.duration)}</span>
+                      {recording.status !== "done" && (
+                        <span>· {statusLabel(recording.status)}</span>
+                      )}
                     </div>
                   </div>
                 </div>

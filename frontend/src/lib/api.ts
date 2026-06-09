@@ -40,6 +40,7 @@ export interface UploadRecordingParams {
   file: File;
   title: string;
   note?: string;
+  source?: "upload" | "realtime";
   onProgress?: (percent: number) => void;
 }
 
@@ -53,6 +54,7 @@ export interface Recording {
   id: number;
   title: string;
   status: string;
+  source: "upload" | "podcast" | "realtime";
   file_url: string;
   original_filename: string;
   duration: number;
@@ -77,12 +79,14 @@ export async function uploadRecording({
   file,
   title,
   note,
+  source,
   onProgress,
 }: UploadRecordingParams): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("title", title);
   if (note) formData.append("note", note);
+  if (source) formData.append("source", source);
 
   const { data } = await api.post<UploadResponse>(
     "/recordings/upload",
@@ -106,7 +110,7 @@ export async function getRecording(id: number): Promise<Recording> {
 
 export async function updateRecording(
   id: number,
-  body: { title?: string; is_favorite?: boolean }
+  body: { title?: string; is_favorite?: boolean; note?: string }
 ): Promise<Recording> {
   const { data } = await api.patch<Recording>(`/recordings/${id}`, body);
   return data;
