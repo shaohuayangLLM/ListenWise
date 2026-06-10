@@ -12,19 +12,24 @@ import {
   Pencil,
   PenLine,
   RefreshCw,
+  SpellCheck,
   Sparkles,
+  Undo2,
   Users,
 } from "lucide-react";
 import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TranscriptPanel from "@/components/TranscriptPanel";
 import {
+  correctTranscript,
   exportRecordingToObsidian,
   exportTranscript,
   getRecordingDetail,
   mediaUrl,
   regenerateSummary,
+  revertCorrection,
   updateRecording,
   updateSpeakerLabels,
+  type CorrectionResult,
   type RecordingDetail,
   type TranscriptSegment,
 } from "@/lib/api";
@@ -106,6 +111,8 @@ export default function RecordingDetailPage({
   const [activeTab, setActiveTab] = useState<"transcript" | "notes">("transcript");
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [correcting, setCorrecting] = useState(false);
+  const [correctionMessage, setCorrectionMessage] = useState<string | null>(null);
   const playerRef = useRef<AudioPlayerHandle>(null);
 
   useEffect(() => {
@@ -154,6 +161,57 @@ export default function RecordingDetailPage({
       setSummaryError(detail || "生成失败，请重试");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const applyCorrectionResult = (data: CorrectionResult) => {
+    setRecording((prev) =>
+      prev && prev.transcript
+        ? {
+            ...prev,
+            transcript: {
+              ...prev.transcript,
+              segments: data.segments,
+              corrected_at: data.corrected_at,
+              correction_model: data.correction_model,
+              can_revert_correction: data.can_revert_correction,
+            },
+          }
+        : prev
+    );
+  };
+
+  const handleCorrect = async () => {
+    if (!recording) return;
+    setCorrecting(true);
+    setCorrectionMessage(null);
+    try {
+      const data = await correctTranscript(recording.id);
+      applyCorrectionResult(data);
+      setCorrectionMessage(
+        data.changed_count
+          ? `订正完成，修改了 ${data.changed_count} 处`
+          : "订正完成，未发现需要修改的内容"
+      );
+    } catch (err) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail;
+      setCorrectionMessage(detail || "订正失败，请重试");
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
+  const handleRevertCorrection = async () => {
+    if (!recording) return;
+    setCorrectionMessage(null);
+    try {
+      const data = await revertCorrection(recording.id);
+      applyCorrectionResult(data);
+      setCorrectionMessage("已还原为原始转写稿");
+    } catch {
+      setCorrectionMessage("还原失败，请重试");
     }
   };
 
@@ -495,6 +553,41 @@ export default function RecordingDetailPage({
           <PenLine size={14} />
           我的笔记
         </button>
+        {transcript && (
+          <div className="ml-auto flex items-center gap-2 pb-1.5">
+            {correctionMessage && (
+              <span className="text-xs text-text-muted">{correctionMessage}</span>
+            )}
+            {transcript.corrected_at && transcript.can_revert_correction && (
+              <button
+                onClick={handleRevertCorrection}
+                disabled={correcting}
+                title="还原为订正前的原始转写稿"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-surface shadow-ring px-2.5 py-1.5 text-xs font-medium text-text-dim transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)] disabled:opacity-50"
+              >
+                <Undo2 size={13} />
+                还原
+              </button>
+            )}
+            <button
+              onClick={handleCorrect}
+              disabled={correcting}
+              title="用 AI + 热词词表修复转写稿中的同音误识别（可还原）"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface shadow-ring px-2.5 py-1.5 text-xs font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:shadow-[0_0_0_1px_var(--accent)] disabled:opacity-50"
+            >
+              {correcting ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <SpellCheck size={13} />
+              )}
+              {correcting
+                ? "订正中…"
+                : transcript.corrected_at
+                  ? "重新订正"
+                  : "AI 术语订正"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mt-3" style={{ height: "calc(100vh - 400px)" }}>

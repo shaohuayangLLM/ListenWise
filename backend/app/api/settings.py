@@ -5,12 +5,14 @@ import logging
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Capability
+from app.models import Capability, Glossary
 from app.services import provider_config
 from app.services.crypto import decrypt, mask
+from app.services.vocabulary import MAX_TERMS
 
 logger = logging.getLogger(__name__)
 
@@ -104,3 +106,49 @@ async def test_provider(capability: Capability, db: AsyncSession = Depends(get_d
 
     # ASR：百炼无轻量 ping 接口，真实效果在首次转写时验证
     return {"ok": True, "message": "密钥已配置（ASR 真实效果将在首次转写时验证）"}
+
+
+# ===== 热词词表（全局单行）：转写热词 + LLM 订正参照 =====
+
+
+class GlossaryIn(BaseModel):
+    terms: list[str]
+
+
+class GlossaryOut(BaseModel):
+    terms: list[str]
+    synced: bool  # 当前词条是否已同步为百炼热词（下次转写时自动同步）
+
+
+@router.get("/glossary")
+async def get_glossary(db: AsyncSession = Depends(get_db)) -> GlossaryOut:
+    row = (await db.execute(select(Glossary))).scalar_one_or_none()
+    if not row:
+        return GlossaryOut(terms=[], synced=False)
+    return GlossaryOut(terms=row.terms or [], synced=bool(row.vocabulary_id))
+
+
+@router.put("/glossary")
+async def update_glossary(
+    body: GlossaryIn, db: AsyncSession = Depends(get_db)
+) -> GlossaryOut:
+    # 去空、去重（保序）、限长
+    seen: set[str] = set()
+    terms: list[str] = []
+    for t in body.terms:
+        t = t.strip()
+        if t and t not in seen:
+            seen.add(t)
+            terms.append(t)
+    if len(terms) > MAX_TERMS:
+        raise HTTPException(400, f"热词最多 {MAX_TERMS} 个（当前 {len(terms)} 个）")
+
+    row = (await db.execute(select(Glossary))).scalar_one_or_none()
+    if row is None:
+        row = Glossary(terms=terms)
+        db.add(row)
+    else:
+        row.terms = terms
+        row.synced_hash = None  # 标脏，下次转写时重新同步百炼热词
+    await db.commit()
+    return GlossaryOut(terms=terms, synced=False)

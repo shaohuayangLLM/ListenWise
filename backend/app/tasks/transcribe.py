@@ -30,11 +30,18 @@ def run_transcription(recording_id: int):
 
         # 3. Resolve ASR provider config (DB first, .env fallback) and transcribe
         from app.services.asr import transcribe
+        from app.services.vocabulary import ensure_vocabulary
 
         asr_provider = resolve_sync(db, Capability.asr)
+        # 热词词表（设置页维护）同步到百炼；失败仅降级为不带热词
+        vocabulary_id = (
+            ensure_vocabulary(db, asr_provider) if asr_provider else None
+        )
         loop = asyncio.new_event_loop()
         try:
-            result = loop.run_until_complete(transcribe(recording.file_url, asr_provider))
+            result = loop.run_until_complete(
+                transcribe(recording.file_url, asr_provider, vocabulary_id)
+            )
         finally:
             loop.close()
 

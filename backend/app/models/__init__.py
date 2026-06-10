@@ -1,5 +1,6 @@
 from app.models.base import Capability, RecordingSource, RecordingStatus, SceneType
 from app.models.folder import Folder
+from app.models.glossary import Glossary
 from app.models.podcast import PodcastEpisode, PodcastShow
 from app.models.provider_config import ModelProviderConfig
 from app.models.recording import Recording
@@ -14,6 +15,7 @@ __all__ = [
     "Folder",
     "Tag",
     "recording_tags",
+    "Glossary",
     "ModelProviderConfig",
     "PodcastShow",
     "PodcastEpisode",

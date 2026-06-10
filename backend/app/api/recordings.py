@@ -360,6 +360,9 @@ async def get_transcript(
         "keywords": transcript.keywords,
         "summary_model": transcript.summary_model,
         "summary_at": transcript.summary_at,
+        "corrected_at": transcript.corrected_at,
+        "correction_model": transcript.correction_model,
+        "can_revert_correction": transcript.original_segments is not None,
         "created_at": transcript.created_at,
     }
 
@@ -451,3 +454,106 @@ async def generate_summary(
     if not out.get("ok"):
         raise HTTPException(status_code=400, detail=out.get("error", "摘要生成失败"))
     return out["data"]
+
+
+def _correct_transcript_sync(recording_id: int) -> dict:
+    """同步执行 LLM 术语订正，供 async endpoint 经线程池调用。"""
+    from app.models import Glossary
+    from app.models.base import Capability
+    from app.services.correct import correct_segments, correction_provider
+    from app.services.provider_config import resolve_sync
+    from app.sync_db import get_sync_db
+
+    db = get_sync_db()
+    try:
+        transcript = (
+            db.query(Transcript)
+            .filter(Transcript.recording_id == recording_id)
+            .first()
+        )
+        if not transcript or not transcript.segments:
+            return {"ok": False, "error": "转写尚未完成，无法订正"}
+
+        llm = resolve_sync(db, Capability.llm)
+        if not (llm and llm.api_key):
+            return {"ok": False, "error": "未配置大模型，请先在设置中配置"}
+        llm = correction_provider(llm)
+
+        glossary = db.query(Glossary).first()
+        terms = [t for t in (glossary.terms if glossary else []) if t]
+
+        try:
+            segments, changed = correct_segments(transcript.segments, terms, llm)
+        except RuntimeError as e:
+            return {"ok": False, "error": str(e)}
+
+        if transcript.original_segments is None:  # 首次订正备份原稿
+            transcript.original_segments = list(transcript.segments)
+        transcript.segments = segments
+        transcript.full_text = "".join(s.get("text", "") for s in segments)
+        transcript.word_count = len(transcript.full_text)
+        transcript.corrected_at = datetime.now(timezone.utc)
+        transcript.correction_model = llm.model
+        db.commit()
+        return {
+            "ok": True,
+            "data": {
+                "segments": transcript.segments,
+                "changed_count": changed,
+                "corrected_at": transcript.corrected_at.isoformat(),
+                "correction_model": transcript.correction_model,
+                "can_revert_correction": True,
+            },
+        }
+    finally:
+        db.close()
+
+
+@router.post("/{recording_id}/transcript/correct")
+async def correct_transcript(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """AI 术语订正：用 LLM + 热词词表修复转写稿中的同音误识别（可还原）。"""
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    out = await asyncio.to_thread(_correct_transcript_sync, recording_id)
+    if not out.get("ok"):
+        raise HTTPException(status_code=400, detail=out.get("error", "订正失败"))
+    return out["data"]
+
+
+@router.post("/{recording_id}/transcript/correct/revert")
+async def revert_correction(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """还原订正：恢复首次订正前备份的原始转写稿。"""
+    result = await db.execute(
+        select(Transcript).where(Transcript.recording_id == recording_id)
+    )
+    transcript = result.scalar_one_or_none()
+    if not transcript:
+        raise HTTPException(status_code=404, detail="Transcript not found")
+    if transcript.original_segments is None:
+        raise HTTPException(status_code=400, detail="没有可还原的订正记录")
+
+    transcript.segments = transcript.original_segments
+    transcript.full_text = "".join(
+        s.get("text", "") for s in transcript.original_segments
+    )
+    transcript.word_count = len(transcript.full_text)
+    transcript.original_segments = None
+    transcript.corrected_at = None
+    transcript.correction_model = None
+    await db.commit()
+    return {
+        "segments": transcript.segments,
+        "corrected_at": None,
+        "correction_model": None,
+        "can_revert_correction": False,
+    }

@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
+  getGlossary,
   getProviders,
-  updateProvider,
   testProvider,
+  updateGlossary,
+  updateProvider,
   type ProviderConfig,
 } from "@/lib/api";
 
@@ -44,8 +46,19 @@ export default function SettingsPage() {
   const [results, setResults] = useState<
     Record<string, { ok: boolean; message: string }>
   >({});
+  const [glossaryDraft, setGlossaryDraft] = useState("");
+  const [glossarySaved, setGlossarySaved] = useState("");
+  const [savingGlossary, setSavingGlossary] = useState(false);
+  const [glossaryMessage, setGlossaryMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    getGlossary()
+      .then((g) => {
+        const text = g.terms.join("\n");
+        setGlossaryDraft(text);
+        setGlossarySaved(text);
+      })
+      .catch(() => {});
     getProviders()
       .then((list) => {
         const cmap: Record<string, ProviderConfig> = {};
@@ -86,6 +99,26 @@ export default function SettingsPage() {
       setResults((r) => ({ ...r, [cap]: { ok: false, message: "保存失败" } }));
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function saveGlossary() {
+    setSavingGlossary(true);
+    setGlossaryMessage(null);
+    try {
+      const terms = glossaryDraft
+        .split("\n")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const g = await updateGlossary(terms);
+      const text = g.terms.join("\n");
+      setGlossaryDraft(text);
+      setGlossarySaved(text);
+      setGlossaryMessage(`已保存 ${g.terms.length} 个热词，下次转写自动生效`);
+    } catch {
+      setGlossaryMessage("保存失败");
+    } finally {
+      setSavingGlossary(false);
     }
   }
 
@@ -217,6 +250,43 @@ export default function SettingsPage() {
           </div>
         );
       })}
+
+      {/* 热词词表 */}
+      <div className="mb-6 rounded-xl border border-border bg-surface p-7 shadow-ring shadow-soft transition-shadow duration-300 [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:border-border-hover hover:shadow-[0_8px_28px_rgba(20,20,19,0.08)]">
+        <div className="font-serif text-[19px] font-semibold">热词词表</div>
+        <div className="mt-0.5 text-[12.5px] text-text-muted">
+          高频专有名词（产品名、公司名、人名等），每行一个，最多 500
+          个。转写时作为 ASR 热词提升识别准确率，AI 术语订正时作为参照词表。
+        </div>
+        <textarea
+          value={glossaryDraft}
+          onChange={(e) => setGlossaryDraft(e.target.value)}
+          placeholder={"千问\n硅基流动\nDeepSeek"}
+          rows={8}
+          className="mt-4 w-full resize-y rounded-lg border border-border bg-surface px-3.5 py-3 text-[14px] leading-[1.8] outline-none transition-colors duration-200 hover:border-border-hover focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-glow)]"
+        />
+        <div className="mt-4 flex items-center gap-3 border-t border-border pt-4">
+          {glossaryMessage && (
+            <span
+              className={`rounded-lg px-2.5 py-1 text-[12.5px] font-semibold ${
+                glossaryMessage === "保存失败"
+                  ? "bg-[rgba(181,81,63,0.10)] text-danger"
+                  : "bg-accent-glow text-success"
+              }`}
+            >
+              {glossaryMessage}
+            </span>
+          )}
+          <div className="flex-1" />
+          <button
+            onClick={saveGlossary}
+            disabled={savingGlossary || glossaryDraft === glossarySaved}
+            className="inline-flex h-9 items-center rounded-lg bg-accent px-4 text-[13px] font-medium text-white transition-all duration-300 [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:-translate-y-px hover:bg-accent-hover disabled:translate-y-0 disabled:opacity-50"
+          >
+            {savingGlossary ? "保存中…" : "保存词表"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

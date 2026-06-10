@@ -215,6 +215,9 @@ export interface Transcript {
   keywords: KeywordItem[];
   summary_model: string | null;
   summary_at: string | null;
+  corrected_at: string | null;
+  correction_model: string | null;
+  can_revert_correction: boolean;
 }
 
 // Recording detail with transcript
@@ -231,6 +234,28 @@ export interface SummaryResult {
 
 export async function regenerateSummary(id: number): Promise<SummaryResult> {
   const { data } = await api.post<SummaryResult>(`/recordings/${id}/summary`);
+  return data;
+}
+
+export interface CorrectionResult {
+  segments: TranscriptSegment[];
+  changed_count?: number;
+  corrected_at: string | null;
+  correction_model: string | null;
+  can_revert_correction: boolean;
+}
+
+export async function correctTranscript(id: number): Promise<CorrectionResult> {
+  const { data } = await api.post<CorrectionResult>(
+    `/recordings/${id}/transcript/correct`
+  );
+  return data;
+}
+
+export async function revertCorrection(id: number): Promise<CorrectionResult> {
+  const { data } = await api.post<CorrectionResult>(
+    `/recordings/${id}/transcript/correct/revert`
+  );
   return data;
 }
 
@@ -303,6 +328,22 @@ export async function testProvider(
   capability: string
 ): Promise<{ ok: boolean; message: string }> {
   const { data } = await api.post(`/settings/providers/${capability}/test`);
+  return data;
+}
+
+// ===== 热词词表 =====
+export interface GlossaryResponse {
+  terms: string[];
+  synced: boolean;
+}
+
+export async function getGlossary(): Promise<GlossaryResponse> {
+  const { data } = await api.get<GlossaryResponse>("/settings/glossary");
+  return data;
+}
+
+export async function updateGlossary(terms: string[]): Promise<GlossaryResponse> {
+  const { data } = await api.put<GlossaryResponse>("/settings/glossary", { terms });
   return data;
 }
 

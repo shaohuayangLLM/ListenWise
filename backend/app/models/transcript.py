@@ -30,5 +30,11 @@ class Transcript(Base, TimestampMixin):
     summary_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # LLM 术语订正：首次订正时备份原始 segments，支持一键还原
+    original_segments: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    corrected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    correction_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     recording: Mapped["Recording"] = relationship(back_populates="transcript")

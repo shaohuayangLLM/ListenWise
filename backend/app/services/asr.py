@@ -69,14 +69,17 @@ class TranscriptResult:
     speaker_count: int
 
 
-async def transcribe(file_path: str, provider=None) -> TranscriptResult:
+async def transcribe(
+    file_path: str, provider=None, vocabulary_id: str | None = None
+) -> TranscriptResult:
     """Transcribe an audio file. ``provider`` is a ResolvedProvider | None.
 
     无 provider 或无密钥时返回 mock 数据（开发态）。
+    vocabulary_id：百炼定制热词表 ID（services/vocabulary.py 同步产出），可选。
     """
     if provider is None or not getattr(provider, "api_key", ""):
         return _mock_transcribe()
-    return await _real_transcribe(file_path, provider)
+    return await _real_transcribe(file_path, provider, vocabulary_id)
 
 
 def _mock_transcribe() -> TranscriptResult:
@@ -92,7 +95,9 @@ def _mock_transcribe() -> TranscriptResult:
     )
 
 
-def _sync_transcribe(file_path: str, provider) -> TranscriptResult:
+def _sync_transcribe(
+    file_path: str, provider, vocabulary_id: str | None = None
+) -> TranscriptResult:
     """Synchronous transcription via DashScope/百炼 OSS upload + REST API.
 
     DashScope Paraformer 与百炼 Fun-ASR 共用此异步录音识别接口，仅 model 名与参数不同。
@@ -118,6 +123,13 @@ def _sync_transcribe(file_path: str, provider) -> TranscriptResult:
 
     # Step 2: Submit async transcription via REST (SDK omits the OssResourceResolve header)
     logger.info("Submitting transcription task via REST API...")
+    parameters = {
+        "language_hints": ["zh", "en"],
+        "diarization_enabled": True,  # 说话人分离
+    }
+    if vocabulary_id:
+        parameters["vocabulary_id"] = vocabulary_id
+        logger.info("Using hotword vocabulary: %s", vocabulary_id)
     with httpx.Client(timeout=30) as client:
         submit_resp = client.post(
             f"{base_url}/services/audio/asr/transcription",
@@ -130,10 +142,7 @@ def _sync_transcribe(file_path: str, provider) -> TranscriptResult:
             json={
                 "model": model,
                 "input": {"file_urls": [oss_url]},
-                "parameters": {
-                    "language_hints": ["zh", "en"],
-                    "diarization_enabled": True,  # 说话人分离
-                },
+                "parameters": parameters,
             },
         )
     if submit_resp.status_code != 200:
@@ -238,8 +247,12 @@ def _parse_result(output) -> TranscriptResult:
     )
 
 
-async def _real_transcribe(file_path: str, provider) -> TranscriptResult:
+async def _real_transcribe(
+    file_path: str, provider, vocabulary_id: str | None = None
+) -> TranscriptResult:
     """Run the blocking transcription in a thread."""
     import asyncio
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, _sync_transcribe, file_path, provider)
+    return await loop.run_in_executor(
+        None, _sync_transcribe, file_path, provider, vocabulary_id
+    )
