@@ -112,9 +112,10 @@ export function useRecorder() {
       startTimer();
       tick();
     } catch {
+      cleanup(); // 失败路径释放已打开的麦克风流/AudioContext，防指示灯长亮
       setError("无法访问麦克风，请检查浏览器权限设置");
     }
-  }, [startTimer, tick]);
+  }, [cleanup, startTimer, tick]);
 
   const pause = useCallback(() => {
     const r = mediaRecorderRef.current;

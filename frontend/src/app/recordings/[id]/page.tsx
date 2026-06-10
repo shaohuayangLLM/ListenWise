@@ -122,6 +122,18 @@ export default function RecordingDetailPage({
       .finally(() => setLoading(false));
   }, [id]);
 
+  // 转写中自动轮询，完成/失败后停止（修复：之前停留在死页面需手动刷新）
+  useEffect(() => {
+    if (!recording) return;
+    if (!["uploading", "transcribing"].includes(recording.status)) return;
+    const timer = setInterval(() => {
+      getRecordingDetail(Number(id))
+        .then(setRecording)
+        .catch(() => {});
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [id, recording?.status]);
+
   // 笔记草稿随记录加载/外部更新同步
   useEffect(() => {
     setNoteDraft(recording?.note ?? "");

@@ -87,6 +87,18 @@ export default function RecordPage() {
   const isPaused = rec.state === "paused";
   const isReady = rec.state === "stopped" && !!rec.file;
 
+  // 录音中 / 录完未转录时，刷新或关页前弹原生确认（防录音与笔记丢失）
+  useEffect(() => {
+    const dirty = isRecording || isPaused || (isReady && !uploading);
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isRecording, isPaused, isReady, uploading]);
+
   if (uploading) {
     return (
       <div className="max-w-[720px] mx-auto py-8">

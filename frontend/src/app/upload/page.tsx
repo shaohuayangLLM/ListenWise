@@ -16,6 +16,7 @@ export default function UploadPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showRecorder, setShowRecorder] = useState(false);
+  const [isWebRecorded, setIsWebRecorded] = useState(false);
 
   const canSubmit = file && !uploading;
 
@@ -28,13 +29,15 @@ export default function UploadPage() {
     setError(null);
 
     try {
-      await uploadRecording({
+      const { id } = await uploadRecording({
         file,
         title: title || file.name.replace(/\.[^.]+$/, ""),
         note: note || undefined,
+        // 浏览器录音属「实时记录」，本地文件属「本地音频」
+        source: isWebRecorded ? "realtime" : "upload",
         onProgress: setProgress,
       });
-      router.push("/");
+      router.push(`/recordings/${id}`);
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "上传失败，请重试";
@@ -45,7 +48,13 @@ export default function UploadPage() {
 
   const handleRecordingComplete = (recordedFile: File) => {
     setFile(recordedFile);
+    setIsWebRecorded(true);
     setShowRecorder(false);
+  };
+
+  const handleFileChange = (f: File | null) => {
+    setFile(f);
+    setIsWebRecorded(false); // 手动选文件 → 本地音频
   };
 
   return (
@@ -59,7 +68,7 @@ export default function UploadPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* File Upload Zone */}
-        <FileUploader file={file} onFileChange={setFile} />
+        <FileUploader file={file} onFileChange={handleFileChange} />
 
         {/* Or divider + Web Recorder */}
         <div className="relative text-center text-text-muted text-[13px] my-6">

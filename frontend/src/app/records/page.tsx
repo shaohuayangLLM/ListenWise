@@ -83,6 +83,20 @@ function RecordsContent() {
       .finally(() => setLoading(false));
   }, []);
 
+  // 有转写中的记录时自动轮询刷新状态
+  const hasProcessing = recordings.some((r) =>
+    ["uploading", "transcribing"].includes(r.status)
+  );
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const timer = setInterval(() => {
+      getRecordings(1, 100)
+        .then((data) => setRecordings(data.items))
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [hasProcessing]);
+
   const filteredRecordings = useMemo(() => {
     let items = recordings;
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ExternalLink,
+  FileText,
   Loader2,
   Rss,
 } from "lucide-react";
@@ -176,6 +177,15 @@ export default function PodcastEpisodePage({
                   ? "正在获取文字稿"
                   : "获取文字稿"}
             </button>
+            {episode.recording_id && episode.recording_status === "done" && (
+              <Link
+                href={`/recordings/${episode.recording_id}`}
+                className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-[13px] font-medium text-white shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:bg-accent-hover"
+              >
+                <FileText size={15} />
+                查看完整解读
+              </Link>
+            )}
           </div>
         </div>
         {!episode.audio_url_available && (
