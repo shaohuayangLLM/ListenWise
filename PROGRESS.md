@@ -174,7 +174,7 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **百炼热词同步 `services/vocabulary.py`**：转写提交前按（词条+模型）指纹增量同步——词表绑定 `target_model`，模型切换重建并清旧表（账号限 10 张）；update 失败回退 create；**任何同步失败降级为不带热词，不阻断转写**。`asr.py` 转写参数透传 `vocabulary_id`。
 - **AI 术语订正 `services/correct.py`**：详情页文字稿 tab「AI 术语订正」手动触发，LLM 分块（3000 字/块，temperature 0）修同音/近音误识别，热词词表作参照；只返回需修改行，单块失败跳过、全败才报错。首次订正备份 `original_segments`，支持「还原」。`POST /recordings/{id}/transcript/correct` + `/revert`。
 - **订正模型升级映射**：qwen-turbo 实测漏修「千问」「DeepSeek」，订正一律 turbo→plus（手动触发量小，成本可忽略）；`correction_model` 记录实际所用模型。实测 0610 会议错例：plus + 新 prompt 修复全部 5 处词表相关误识别。
-- 迁移 `a8c3e5f9d2b7`：`glossary` 表 + `transcripts.original_segments/corrected_at/correction_model`。**Render 部署后需跑一次 alembic upgrade**。
+- 迁移 `a8c3e5f9d2b7`：`glossary` 表 + `transcripts.original_segments/corrected_at/correction_model`（Render startCommand 自带 `alembic upgrade head`，部署即自动应用）。
 
 ---
 
