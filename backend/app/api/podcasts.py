@@ -564,6 +564,15 @@ async def get_episode(episode_id: int, db: AsyncSession = Depends(get_db)):
                 "full_text": row.full_text,
                 "word_count": row.word_count,
                 "speaker_labels": row.speaker_labels,
+                "summary": row.summary,
+                "outline": row.outline,
+                "highlights": row.highlights,
+                "keywords": row.keywords,
+                "summary_model": row.summary_model,
+                "summary_at": row.summary_at,
+                "corrected_at": row.corrected_at,
+                "correction_model": row.correction_model,
+                "can_revert_correction": bool(row.original_segments),
             }
     response["transcript"] = transcript
     return response
