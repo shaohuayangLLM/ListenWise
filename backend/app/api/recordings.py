@@ -509,6 +509,81 @@ def _correct_transcript_sync(recording_id: int) -> dict:
         db.close()
 
 
+def _identify_speakers_sync(recording_id: int) -> dict:
+    """同步识别说话人姓名，供 async endpoint 经线程池调用。"""
+    from app.models.base import Capability
+    from app.services.identify_speakers import identify_speakers
+    from app.services.provider_config import resolve_sync
+    from app.sync_db import get_sync_db
+
+    db = get_sync_db()
+    try:
+        transcript = (
+            db.query(Transcript)
+            .filter(Transcript.recording_id == recording_id)
+            .first()
+        )
+        if not transcript or not transcript.segments:
+            return {"ok": False, "error": "转写尚未完成，无法识别说话人"}
+
+        llm = resolve_sync(db, Capability.llm)
+        if not (llm and llm.api_key):
+            return {"ok": False, "error": "未配置大模型，请先在设置中配置"}
+
+        # 上下文：播客 shownotes（含主播名单）+ 上传备注，辅助 LLM 推断姓名
+        context_parts: list[str] = []
+        episode = (
+            db.query(PodcastEpisode)
+            .filter(PodcastEpisode.recording_id == recording_id)
+            .first()
+        )
+        if episode and episode.shownotes_text:
+            context_parts.append(episode.shownotes_text[:2000])
+        recording = (
+            db.query(Recording).filter(Recording.id == recording_id).first()
+        )
+        if recording and recording.note:
+            context_parts.append(recording.note[:1000])
+
+        labels = identify_speakers(transcript.segments, "\n".join(context_parts), llm)
+
+        # AI 识别的填入，但不覆盖用户已手动命名的（用户优先）
+        merged = dict(transcript.speaker_labels or {})
+        added = 0
+        for k, v in labels.items():
+            if k not in merged:
+                merged[k] = v
+                added += 1
+        if added:
+            transcript.speaker_labels = merged
+            transcript.is_edited = True
+            db.commit()
+        return {
+            "ok": True,
+            "data": {"speaker_labels": merged, "identified": added},
+        }
+    finally:
+        db.close()
+
+
+@router.post("/{recording_id}/transcript/identify-speakers")
+async def identify_speakers_endpoint(
+    recording_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """AI 识别说话人姓名：根据对话自我介绍 + 节目背景，把 A/B/C 映射成真名（写入 speaker_labels，不覆盖手动命名）。"""
+    result = await db.execute(
+        select(Recording).where(Recording.id == recording_id)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Recording not found")
+
+    out = await asyncio.to_thread(_identify_speakers_sync, recording_id)
+    if not out.get("ok"):
+        raise HTTPException(status_code=400, detail=out.get("error", "识别失败"))
+    return out["data"]
+
+
 @router.post("/{recording_id}/transcript/correct")
 async def correct_transcript(
     recording_id: int,

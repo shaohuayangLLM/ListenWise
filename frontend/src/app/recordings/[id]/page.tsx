@@ -16,6 +16,7 @@ import {
   Sparkles,
   Undo2,
   Users,
+  Wand2,
 } from "lucide-react";
 import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TranscriptPanel from "@/components/TranscriptPanel";
@@ -24,6 +25,7 @@ import {
   exportRecordingToObsidian,
   exportTranscript,
   getRecordingDetail,
+  identifySpeakers,
   mediaUrl,
   regenerateSummary,
   revertCorrection,
@@ -109,6 +111,8 @@ export default function RecordingDetailPage({
   const [exportError, setExportError] = useState<string | null>(null);
   const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [identifying, setIdentifying] = useState(false);
+  const [speakerMessage, setSpeakerMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"transcript" | "notes">("transcript");
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -281,6 +285,32 @@ export default function RecordingDetailPage({
     }
   };
 
+  const handleIdentifySpeakers = async () => {
+    if (!recording) return;
+    setIdentifying(true);
+    setSpeakerMessage(null);
+    try {
+      const data = await identifySpeakers(recording.id);
+      setRecording((prev) =>
+        prev && prev.transcript
+          ? {
+              ...prev,
+              transcript: { ...prev.transcript, speaker_labels: data.speaker_labels },
+            }
+          : prev
+      );
+      setSpeakerMessage(
+        data.identified > 0
+          ? `已识别 ${data.identified} 位，可手动微调`
+          : "未能识别出姓名，可手动改名"
+      );
+    } catch {
+      setSpeakerMessage("识别失败，请重试");
+    } finally {
+      setIdentifying(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -378,6 +408,22 @@ export default function RecordingDetailPage({
             <Users size={14} />
             识别到 {speakers.length} 位说话人
           </span>
+          <button
+            onClick={handleIdentifySpeakers}
+            disabled={identifying}
+            title="根据对话自我介绍和节目信息，AI 自动识别说话人姓名（识别后仍可手动改）"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-surface shadow-ring px-2.5 py-1.5 text-xs font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:shadow-[0_0_0_1px_var(--accent)] disabled:opacity-50"
+          >
+            {identifying ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Wand2 size={12} />
+            )}
+            {identifying ? "识别中…" : "AI 识别姓名"}
+          </button>
+          {speakerMessage && (
+            <span className="text-xs text-text-muted">{speakerMessage}</span>
+          )}
           {speakers.map((sp) => (
             <span
               key={sp.speaker}

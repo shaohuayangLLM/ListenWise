@@ -269,6 +269,15 @@ export async function updateSpeakerLabels(
   return data;
 }
 
+export async function identifySpeakers(
+  id: number
+): Promise<{ speaker_labels: Record<string, string>; identified: number }> {
+  const { data } = await api.post(
+    `/recordings/${id}/transcript/identify-speakers`
+  );
+  return data;
+}
+
 export async function getRecordingDetail(
   id: number
 ): Promise<RecordingDetail> {
