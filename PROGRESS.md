@@ -4,8 +4,8 @@
 
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `main`（已推 GitHub）
-**最后更新：** 2026-06-09
-**最近：** M12 会议录音（专注记笔记）+ 笔记二次编辑融入 AI 摘要 + 记录来源类型（实时记录/本地音频/播客）。已 push 上线（`36ad3cc`），Vercel + Render 部署中。
+**最后更新：** 2026-06-11
+**最近：** M14 项目复盘修复（6 个 P0 主链路断点）+ 详情页体验（声纹动画/V4 底部播放条/顶部紧凑）+ AI 自动说话人命名 + PodNote/SpotScribe 竞品调研。已 push 上线（`7be2636`），Vercel + Render 部署中。
 
 ---
 
@@ -175,6 +175,16 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **AI 术语订正 `services/correct.py`**：详情页文字稿 tab「AI 术语订正」手动触发，LLM 分块（3000 字/块，temperature 0）修同音/近音误识别，热词词表作参照；只返回需修改行，单块失败跳过、全败才报错。首次订正备份 `original_segments`，支持「还原」。`POST /recordings/{id}/transcript/correct` + `/revert`。
 - **订正模型升级映射**：qwen-turbo 实测漏修「千问」「DeepSeek」，订正一律 turbo→plus（手动触发量小，成本可忽略）；`correction_model` 记录实际所用模型。实测 0610 会议错例：plus + 新 prompt 修复全部 5 处词表相关误识别。
 - 迁移 `a8c3e5f9d2b7`：`glossary` 表 + `transcripts.original_segments/corrected_at/correction_model`（Render startCommand 自带 `alembic upgrade head`，部署即自动应用）。
+
+### ✅ M14 — 项目复盘修复 + 详情页体验 + AI 说话人命名 + 竞品调研（2026-06-11）
+
+> 背景：先做整项目复盘（9 agent workflow，6 P0/14 P1/18 P2，报告见 `docs/review/2026-06-10-项目复盘.md`），按批次修 P0；再据 PodNote 竞品扒接口补「自动说话人命名」。
+
+- **LLM 默认换 qwen-turbo**：`config.py` 默认模型 qwen-plus→qwen-turbo（摘要成本省约 62%，同百炼生态零迁移；订正仍走 turbo→plus 升级）。
+- **复盘批次一+二·修 6 个 P0 主链路断点**：① 详情页/列表页转写中**自动轮询**（修转写完停在死页面需手刷）② 上传成功跳详情页而非首页（对齐录音页）③ 录音页 `beforeunload` 防录音+笔记丢失 ④ `useRecorder` 失败路径 `cleanup` 防麦克风流泄漏 ⑤ `/upload` 浏览器录音 source 标 `realtime`（修数据分类）⑥ 播客单集 done 后加「查看完整解读」入口直达 `/recordings/{id}`。
+- **详情页体验**：转写中**声纹跳动动画**（`lw-wave`）+ failed 态明确提示 + 重新上传入口；顶部紧凑化（播放器压扁、AI 摘要默认折叠整行可点）；**V4 底部固定播放条**（小宇宙式，避开 sidebar，音字联动/seek/倍速零损失，详情页留 `pb-14`）。形态稿 `docs/design/迷你播放器形态对比.html`（V1-V4）。
+- **AI 自动说话人命名（参考 PodNote）**：`services/identify_speakers.py` 用 LLM 根据对话自我介绍/互相称呼 + 播客 shownotes 主播名单，把 ASR 的 A/B/C 映射成真名，写入 `speaker_labels`（不覆盖用户手动命名）；详情页说话人区「AI 识别姓名」按钮，识别后 chip 显示真名、仍可手动微调。`POST /recordings/{id}/transcript/identify-speakers`。实测 #568 辩论 9 人识出 7 人真名。
+- **竞品调研**：`docs/research/2026-06-11-podnote竞品调研.md`（PodNote=Genvox/WhalesGrowth，扒接口得数据模型 meta/content/audio 三分 + 技术栈反推=阿里云 Fun-ASR/Paraformer+Qwen，与 ListenWise 几乎同栈；据用户截图修正"自动说话人命名"）+ SpotScribe（Whisper、无说话人、无批量）。结论：竞争在产品层不在技术层；真空机会=批量转整档播客。
 
 ---
 
