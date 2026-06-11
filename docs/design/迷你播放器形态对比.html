@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ListenWise · 迷你播放器形态对比</title>
+<style>
+  /* ===== ListenWise 真实 token（globals.css 摘录） ===== */
+  :root {
+    --bg: #f5f4ed;          /* 羊皮纸 */
+    --surface: #faf9f5;     /* 象牙卡 */
+    --surface-2: #f0eee6;
+    --surface-3: #e8e6dc;
+    --border: #e3e0d5;
+    --text: #141413;
+    --text-dim: #5e5d59;
+    --text-muted: #8a887f;
+    --accent: #c96442;      /* 陶土 */
+    --accent-hover: #d97757;
+    --accent-glow: rgba(201, 100, 66, 0.10);
+    --ease: cubic-bezier(.16,1,.3,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+    padding: 48px 24px 120px; max-width: 860px; margin: 0 auto;
+  }
+  .serif { font-family: Georgia, "Songti SC", serif; }
+  h1 { font-family: Georgia, "Songti SC", serif; font-size: 28px; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--text-dim); font-size: 14px; margin-bottom: 40px; }
+
+  .variant { margin-bottom: 56px; }
+  .v-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .v-tag {
+    font-size: 11px; font-weight: 600; color: #fff; background: var(--accent);
+    padding: 3px 10px; border-radius: 999px; letter-spacing: 0.04em;
+  }
+  .v-title { font-family: Georgia, "Songti SC", serif; font-size: 19px; font-weight: 600; }
+  .v-note { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.7; }
+  .v-note b { color: var(--accent); font-weight: 600; }
+
+  /* 仿详情页画布 */
+  .stage {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px; box-shadow: 0 1px 2px rgba(20,20,19,.04);
+  }
+  .pg-title { font-family: Georgia, "Songti SC", serif; font-size: 20px; font-weight: 600; margin-bottom: 14px; display:flex; align-items:center; gap:10px; }
+  .pg-title .back { color: var(--text-muted); font-size: 16px; }
+  .card {
+    background: var(--surface); border-radius: 12px;
+    box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(20,20,19,.04);
+  }
+
+  /* 通用小元素 */
+  .play-btn {
+    width: 30px; height: 30px; border-radius: 999px; background: var(--accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    font-size: 11px; cursor: pointer; transition: background .2s var(--ease);
+  }
+  .play-btn:hover { background: var(--accent-hover); }
+  .track { position: relative; height: 4px; border-radius: 999px; background: var(--surface-3); flex: 1; }
+  .track .fill { position: absolute; inset: 0 70% 0 0; border-radius: 999px; background: var(--accent); }
+  .tcode { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .speed { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; }
+
+  .sum-row {
+    display: flex; align-items: center; gap: 8px; padding: 11px 16px;
+    font-size: 13.5px; color: var(--text-dim);
+  }
+  .sum-row .spark { color: var(--accent); }
+  .sum-row .chev { margin-left: auto; color: var(--text-muted); }
+
+  .transcript { padding: 14px 16px; }
+  .seg { display: flex; gap: 10px; padding: 7px 0; font-size: 13.5px; line-height: 1.8; }
+  .seg .ts { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--text-muted); padding-top: 4px; white-space: nowrap; cursor: pointer; }
+  .seg .ts:hover { color: var(--accent); }
+  .seg .sp { color: var(--accent); font-weight: 600; font-size: 12px; padding-top: 3px; white-space: nowrap; }
+  .seg.active { background: var(--accent-glow); border-radius: 8px; padding-left: 8px; padding-right: 8px; margin: 0 -8px; }
+  .more { text-align: center; color: var(--text-muted); font-size: 12px; padding: 10px 0 2px; }
+
+  .h-badge {
+    display: inline-block; font-size: 11px; color: var(--text-muted);
+    border: 1px dashed var(--border); border-radius: 6px; padding: 2px 8px; margin-left: 8px;
+  }
+
+  /* ===== V1 单行条 ===== */
+  .bar-v1 { display: flex; align-items: center; gap: 12px; padding: 9px 14px; margin-bottom: 12px; }
+
+  /* ===== V2 标题行内嵌 ===== */
+  .v2-head { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
+  .v2-head .pg-t { font-family: Georgia, "Songti SC", serif; font-size: 20px; font-weight: 600; flex: 1; min-width: 0; }
+  .v2-head .mini { display: flex; align-items: center; gap: 8px; }
+  .v2-line { position: relative; height: 3px; background: var(--surface-3); border-radius: 999px; margin: 10px 0 14px; cursor: pointer; }
+  .v2-line .fill { position: absolute; inset: 0 70% 0 0; background: var(--accent); border-radius: 999px; }
+
+  /* ===== V3 底部浮条 ===== */
+  .v3-stage { position: relative; overflow: hidden; }
+  .float-bar {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border-radius: 999px; padding: 8px 16px 8px 9px;
+    box-shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(20,20,19,.14);
+    width: 72%;
+  }
+  .float-bar .close { color: var(--text-muted); font-size: 12px; cursor: pointer; margin-left: 2px; }
+
+  .compare { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+  .compare th, .compare td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  .compare th { background: var(--surface-2); font-weight: 600; }
+  .compare td:first-child { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>迷你播放器 · 三个形态</h1>
+<p class="sub">用 ListenWise 真实 token 绘制 · 保守 → 激进 · 共同点：保留音字联动（点时间戳跳转、播放高亮跟随）</p>
+
+<!-- ================= V1 ================= -->
+<div class="variant">
+  <div class="v-head"><span class="v-tag">V1 保守</span><span class="v-title">单行迷你条</span><span class="h-badge">高 ≈48px（现版本约 110px）</span></div>
+  <p class="v-note">播放键、进度、时间码、倍速压进<b>一行</b>，永远可见。改动最小，习惯零迁移。</p>
+  <div class="stage">
+    <div class="pg-title"><span class="back">←</span> 6月8日 产品评审会议</div>
+    <div class="card bar-v1">
+      <span class="play-btn">▶</span>
+      <span class="track"><span class="fill"></span></span>
+      <span class="tcode">03:42 / 12:30</span>
+      <span class="speed">1.0×</span>
+    </div>
+    <div class="card sum-row"><span class="spark">✦</span> AI 摘要 <span style="font-size:11px;color:var(--text-muted)">（默认折叠）</span><span class="chev">▾</span></div>
+    <div class="card transcript" style="margin-top:12px">
+      <div class="seg"><span class="ts">00:00</span><span class="sp">徐涛</span><span>今天我们主要过一下 P0 模块四的剩余需求，先从逐字稿编辑开始。</span></div>
+      <div class="seg active"><span class="ts">03:42</span><span class="sp">敏姐</span><span>这一段正在播放，文字稿高亮自动跟随音频进度。</span></div>
+      <div class="seg"><span class="ts">05:18</span><span class="sp">徐涛</span><span>点击左侧任意时间戳，可以直接跳到那个位置听原文。</span></div>
+      <div class="more">⋯ 文字稿区比现在多出约 60px 可视空间 ⋯</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= V2 ================= -->
+<div class="variant">
+  <div class="v-head"><span class="v-tag">V2 中度</span><span class="v-title">标题行内嵌 + 发丝进度线</span><span class="h-badge">高 ≈0（并入标题行）</span></div>
+  <p class="v-note">播放键和时间码<b>并进页面标题行</b>右侧，进度条退化为标题下方一条 3px 发丝线（可点击跳转）。播放器作为独立区块<b>消失</b>，但全部能力保留。</p>
+  <div class="stage">
+    <div class="v2-head">
+      <span style="color:var(--text-muted)">←</span>
+      <span class="pg-t">6月8日 产品评审会议</span>
+      <span class="mini">
+        <span class="play-btn" style="width:26px;height:26px;font-size:10px">▶</span>
+        <span class="tcode">03:42 / 12:30</span>
+        <span class="speed">1.0×</span>
+      </span>
+    </div>
+    <div class="v2-line"><span class="fill"></span></div>
+    <div class="card sum-row"><span class="spark">✦</span> AI 摘要<span class="chev">▾</span></div>
+    <div class="card transcript" style="margin-top:12px">
+      <div class="seg"><span class="ts">00:00</span><span class="sp">徐涛</span><span>今天我们主要过一下 P0 模块四的剩余需求，先从逐字稿编辑开始。</span></div>
+      <div class="seg active"><span class="ts">03:42</span><span class="sp">敏姐</span><span>这一段正在播放，文字稿高亮自动跟随音频进度。</span></div>
+      <div class="seg"><span class="ts">05:18</span><span class="sp">徐涛</span><span>点击左侧任意时间戳，可以直接跳到那个位置听原文。</span></div>
+      <div class="seg"><span class="ts">07:02</span><span class="sp">敏姐</span><span>顶部彻底没有播放器区块了，文字稿成为页面绝对主角。</span></div>
+      <div class="more">⋯ 文字稿区比现在多出约 110px 可视空间 ⋯</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= V3 ================= -->
+<div class="variant">
+  <div class="v-head"><span class="v-tag">V3 激进</span><span class="v-title">默认无播放器 · 点时间戳浮出底部胶囊</span><span class="h-badge">默认高 = 0</span></div>
+  <p class="v-note">页面<b>默认完全没有播放器</b>——纯文字稿阅读体验。点任意时间戳时，底部<b>浮出迷你胶囊条</b>从该处播放（类似音乐 App 的 mini player），点 ✕ 收起。「读稿为主、偶尔核对」的极致形态。</p>
+  <div class="stage v3-stage">
+    <div class="pg-title"><span class="back">←</span> 6月8日 产品评审会议</div>
+    <div class="card sum-row"><span class="spark">✦</span> AI 摘要<span class="chev">▾</span></div>
+    <div class="card transcript" style="margin-top:12px; padding-bottom:60px">
+      <div class="seg"><span class="ts">00:00</span><span class="sp">徐涛</span><span>今天我们主要过一下 P0 模块四的剩余需求，先从逐字稿编辑开始。</span></div>
+      <div class="seg active"><span class="ts">03:42</span><span class="sp">敏姐</span><span>点了这段的时间戳 → 底部浮出胶囊播放器，从这里开始播。</span></div>
+      <div class="seg"><span class="ts">05:18</span><span class="sp">徐涛</span><span>不点时间戳就永远是干净的纯文字稿页面。</span></div>
+      <div class="more">⋯ 顶部零占用，文字稿区最大化 ⋯</div>
+    </div>
+    <div class="float-bar">
+      <span class="play-btn" style="width:26px;height:26px;font-size:10px">⏸</span>
+      <span class="track"><span class="fill"></span></span>
+      <span class="tcode">03:42 / 12:30</span>
+      <span class="close">✕</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= V4 ================= -->
+<div class="variant">
+  <div class="v-head"><span class="v-tag">V4 底部常驻</span><span class="v-title">固定底部播放条（小宇宙式）</span><span class="h-badge">顶部占用 0 · 底部常驻 ≈52px</span></div>
+  <p class="v-note">播放条<b>固定在视口底部</b>，始终可见——顶部完全让给标题和文字稿，符合播客/音乐 App 的通用心智。文字稿滚到底部时自动留出空隙不被遮挡。可加「⌄」收起成右下角小圆钮。</p>
+  <div class="stage v3-stage">
+    <div class="pg-title"><span class="back">←</span> 6月8日 产品评审会议</div>
+    <div class="card sum-row"><span class="spark">✦</span> AI 摘要<span class="chev">▾</span></div>
+    <div class="card transcript" style="margin-top:12px; padding-bottom:64px">
+      <div class="seg"><span class="ts">00:00</span><span class="sp">徐涛</span><span>今天我们主要过一下 P0 模块四的剩余需求，先从逐字稿编辑开始。</span></div>
+      <div class="seg active"><span class="ts">03:42</span><span class="sp">敏姐</span><span>播放中，高亮跟随；播放条一直在底部，随时可暂停/拖进度。</span></div>
+      <div class="seg"><span class="ts">05:18</span><span class="sp">徐涛</span><span>顶部没有任何播放器痕迹，进页面第一眼就是文字稿。</span></div>
+      <div class="more">⋯ 顶部零占用；底部播放条全宽常驻 ⋯</div>
+    </div>
+    <div class="float-bar" style="width:calc(100% - 44px); border-radius:12px; bottom:10px;">
+      <span class="play-btn" style="width:26px;height:26px;font-size:10px">⏸</span>
+      <span class="track"><span class="fill"></span></span>
+      <span class="tcode">03:42 / 12:30</span>
+      <span class="speed">1.0×</span>
+      <span class="close" title="收起">⌄</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 对比 ================= -->
+<h1 style="font-size:20px; margin-top:8px">取舍对比</h1>
+<table class="compare">
+  <tr><th></th><th>V1 单行条</th><th>V2 标题行内嵌</th><th>V3 底部浮条</th><th>V4 底部常驻</th></tr>
+  <tr><td>顶部占用</td><td>≈48px</td><td>≈0（并入标题）</td><td>0</td><td>0</td></tr>
+  <tr><td>底部占用</td><td>0</td><td>0</td><td>播放时 ≈52px</td><td>常驻 ≈52px（可收起）</td></tr>
+  <tr><td>播放器可见性</td><td>始终可见</td><td>始终可见（弱化）</td><td>默认隐藏，按需浮现</td><td>始终可见（底部）</td></tr>
+  <tr><td>音字联动</td><td>✅ 完整</td><td>✅ 完整</td><td>✅ 完整（点时间戳触发）</td><td>✅ 完整</td></tr>
+  <tr><td>改动量</td><td>小（只改 AudioPlayer 布局）</td><td>中（播放器并入标题行）</td><td>中大（浮层 + 出现/收起逻辑）</td><td>中（fixed 定位 + 内容留白）</td></tr>
+  <tr><td>心智</td><td>传统播放器</td><td>极简工具条</td><td>读稿优先</td><td>播客 App（小宇宙/Apple Music）</td></tr>
+  <tr><td>适合</td><td>常回听的人</td><td>偶尔回听、想要干净顶部</td><td>几乎只读稿、偶尔核对错字</td><td>边听边看稿、要随手控制播放</td></tr>
+</table>
+
+</body>
+</html>

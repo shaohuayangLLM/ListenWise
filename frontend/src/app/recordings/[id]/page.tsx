@@ -100,7 +100,8 @@ export default function RecordingDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [summaryOpen, setSummaryOpen] = useState(true);
+  // 默认折叠，给下方文字稿让出空间；点击标题行展开
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [outlineExpanded, setOutlineExpanded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
@@ -300,7 +301,8 @@ export default function RecordingDetailPage({
   }
 
   return (
-    <div>
+    // 底部留白给固定播放条（V4）让位
+    <div className={recording.file_url ? "pb-14" : undefined}>
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4 min-w-0">
@@ -420,7 +422,10 @@ export default function RecordingDetailPage({
       {/* AI 摘要（播客自动生成 / 上传手动触发）—— 可折叠 + 手动生成 */}
       {transcript && (
         <div className="mt-4 rounded-xl bg-surface shadow-ring shadow-soft overflow-hidden">
-          <div className="flex w-full items-baseline gap-2.5 px-6 py-5">
+          <div
+            className="flex w-full cursor-pointer items-baseline gap-2.5 px-5 py-3.5"
+            onClick={() => setSummaryOpen((v) => !v)}
+          >
             <Sparkles size={16} className="text-accent self-center" />
             <h2 className="font-serif text-lg font-semibold tracking-tight">AI 摘要</h2>
             {transcript.summary_model && (
@@ -430,7 +435,10 @@ export default function RecordingDetailPage({
             )}
             <div className="ml-auto flex items-center gap-1 self-center">
               <button
-                onClick={handleGenerateSummary}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGenerateSummary();
+                }}
                 disabled={generating}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-bg shadow-ring px-2.5 py-1.5 text-xs font-medium text-accent transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:shadow-[0_0_0_1px_var(--accent)] disabled:opacity-50"
               >
@@ -445,7 +453,10 @@ export default function RecordingDetailPage({
                     : "生成 AI 摘要"}
               </button>
               <button
-                onClick={() => setSummaryOpen((v) => !v)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSummaryOpen((v) => !v);
+                }}
                 className="p-1.5 text-text-muted"
                 aria-label="折叠"
               >
@@ -461,7 +472,7 @@ export default function RecordingDetailPage({
           </div>
 
           {summaryOpen && (
-            <div className="px-6 pb-6">
+            <div className="px-5 pb-5">
               {summaryError && (
                 <p className="mb-3 text-sm font-medium text-danger">
                   {summaryError}
@@ -556,6 +567,43 @@ export default function RecordingDetailPage({
         </div>
       )}
 
+      {/* 转写处理中：声纹动画 + 轮询自动刷新提示 */}
+      {["uploading", "transcribing"].includes(recording.status) && (
+        <div className="mt-6 flex flex-col items-center justify-center rounded-xl bg-surface py-16 shadow-ring shadow-soft">
+          <div className="mb-6 flex h-10 items-end gap-[5px]">
+            {[14, 26, 38, 22, 32, 18, 28].map((h, i) => (
+              <span
+                key={i}
+                className="lw-wave w-[5px] rounded-full bg-accent"
+                style={{ height: `${h}px`, animationDelay: `${i * 0.13}s` }}
+              />
+            ))}
+          </div>
+          <p className="mb-1.5 font-serif text-lg font-semibold">正在转写</p>
+          <p className="text-sm text-text-muted">
+            完成后将自动显示文字稿，无需手动刷新
+          </p>
+        </div>
+      )}
+
+      {/* 转写失败提示 */}
+      {recording.status === "failed" && (
+        <div className="mt-6 flex flex-col items-center justify-center rounded-xl bg-surface py-14 shadow-ring shadow-soft">
+          <p className="mb-1.5 font-serif text-lg font-semibold text-danger">转写失败</p>
+          <p className="mb-5 text-sm text-text-muted">
+            可能是音频中没有可识别的语音，或服务暂时不可用
+          </p>
+          <Link
+            href="/upload"
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-ring transition-colors hover:bg-accent-hover"
+          >
+            重新上传
+          </Link>
+        </div>
+      )}
+
+      {recording.status === "done" && (
+        <>
       {/* 转录文本 / 我的笔记 —— tab 切换，笔记可随时二次编辑 */}
       <div className="mt-4 flex items-center gap-1 border-b border-border">
         <button onClick={() => setActiveTab("transcript")} className={tabClass(activeTab === "transcript")}>
@@ -602,7 +650,7 @@ export default function RecordingDetailPage({
         )}
       </div>
 
-      <div className="mt-3" style={{ height: "calc(100vh - 400px)" }}>
+      <div className="mt-3" style={{ height: "calc(100vh - 280px)" }}>
         {activeTab === "transcript" ? (
           <TranscriptPanel
             segments={transcript?.segments || []}
@@ -634,6 +682,8 @@ export default function RecordingDetailPage({
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

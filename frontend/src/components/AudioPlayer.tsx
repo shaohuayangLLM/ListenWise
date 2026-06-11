@@ -153,80 +153,76 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
 
     const progress = duration > 0 ? currentTime / duration : 0;
 
+    // V4 形态：固定视口底部的迷你播放条（小宇宙式），顶部零占用，音字联动不变
     return (
-      <div className="bg-surface rounded-xl shadow-ring shadow-soft p-5 mb-6">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 px-4 py-2 backdrop-blur-sm shadow-[0_-4px_16px_rgba(20,20,19,0.06)] md:px-8 lg:left-[228px]">
         {/* Hidden audio element */}
         <audio ref={audioRef} src={fileUrl} preload="metadata" />
 
-        {/* Progress bar */}
-        <div
-          ref={progressBarRef}
-          onClick={handleProgressClick}
-          className="relative h-10 cursor-pointer group mb-4"
-        >
-          {/* Track */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 rounded-full bg-surface-3 overflow-hidden">
-            {/* Buffered */}
-            <div
-              className="absolute inset-y-0 left-0 bg-accent-glow rounded-full transition-[width] duration-300"
-              style={{ width: `${buffered * 100}%` }}
-            />
-            {/* Progress */}
-            <div
-              className="absolute inset-y-0 left-0 bg-accent rounded-full"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-          {/* Thumb */}
-          <div
-            className={clsx(
-              "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_0_1px_var(--accent),0_1px_3px_rgba(20,20,19,0.2)] transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
-              "group-hover:scale-125"
-            )}
-            style={{ left: `${progress * 100}%` }}
-          />
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2.5 md:gap-3.5">
           <button
             onClick={() => skip(-10)}
-            className="p-2 rounded-lg hover:bg-surface-2 text-text-dim transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface-2 text-text-dim transition-colors"
             title="后退 10 秒"
           >
-            <SkipBack size={18} />
+            <SkipBack size={15} />
           </button>
 
           <button
             onClick={togglePlay}
             disabled={!ready}
             className={clsx(
-              "w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center shadow-[0_0_0_1px_rgba(20,20,19,0.04)] transition-colors duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_0_1px_rgba(20,20,19,0.04)] transition-colors duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
               ready ? "hover:bg-accent-hover" : "opacity-50"
             )}
           >
             {isPlaying ? (
-              <Pause size={18} />
+              <Pause size={15} />
             ) : (
-              <Play size={18} className="ml-0.5" />
+              <Play size={15} className="ml-0.5" />
             )}
           </button>
 
           <button
             onClick={() => skip(10)}
-            className="p-2 rounded-lg hover:bg-surface-2 text-text-dim transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface-2 text-text-dim transition-colors"
             title="快进 10 秒"
           >
-            <SkipForward size={18} />
+            <SkipForward size={15} />
           </button>
 
-          <span className="text-sm font-mono text-text-dim tabular-nums">
-            <span className="text-accent font-semibold">{formatTime(currentTime)}</span> / {formatTime(duration)}
+          {/* Progress bar（行内 flex-1） */}
+          <div
+            ref={progressBarRef}
+            onClick={handleProgressClick}
+            className="group relative h-8 min-w-0 flex-1 cursor-pointer"
+          >
+            <div className="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-surface-3">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-accent-glow transition-[width] duration-300"
+                style={{ width: `${buffered * 100}%` }}
+              />
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-accent"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+            <div
+              className={clsx(
+                "absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_1px_var(--accent),0_1px_3px_rgba(20,20,19,0.2)] transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)]",
+                "group-hover:scale-125"
+              )}
+              style={{ left: `${progress * 100}%` }}
+            />
+          </div>
+
+          <span className="shrink-0 text-[12.5px] font-mono text-text-dim tabular-nums">
+            <span className="font-semibold text-accent">{formatTime(currentTime)}</span> / {formatTime(duration)}
           </span>
 
           <button
             onClick={cycleSpeed}
-            className="ml-auto px-3 py-1.5 rounded-lg bg-surface text-text-dim text-xs font-mono font-medium shadow-ring hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)] transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)]"
+            className="shrink-0 rounded-lg bg-surface px-2.5 py-1 text-xs font-mono font-medium text-text-dim shadow-ring transition-all duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:text-accent hover:shadow-[0_0_0_1px_var(--accent)]"
           >
             {speed.toFixed(1)}x
           </button>
