@@ -13,6 +13,8 @@ class Settings(BaseSettings):
 
     # ASR provider 选择（DB 中 model_provider_configs 优先；此为 .env 兜底）
     asr_provider: str = "dashscope"  # dashscope | fun_asr
+    # dashscope 下的录音识别模型，可换免费额度的版本（paraformer-v2 已无免费 → 默认 v1）
+    asr_model: str = "paraformer-v1"
 
     # DashScope / 阿里云百炼
     dashscope_api_key: str = ""

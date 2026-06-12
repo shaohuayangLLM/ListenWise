@@ -32,7 +32,7 @@ def _env_fallback(capability: Capability) -> ResolvedProvider | None:
         if not settings.dashscope_api_key:
             return None
         provider = settings.asr_provider  # dashscope | fun_asr
-        model = "fun-asr" if provider == "fun_asr" else "paraformer-v2"
+        model = "fun-asr" if provider == "fun_asr" else settings.asr_model
         return ResolvedProvider(
             provider, settings.dashscope_api_key, settings.dashscope_base_url, model
         )
