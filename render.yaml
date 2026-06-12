@@ -20,7 +20,9 @@ services:
       - key: DASHSCOPE_API_KEY     # 百炼 key（Fun-ASR + qwen 共用）
         sync: false
       - key: ASR_PROVIDER
-        value: fun_asr
+        value: dashscope        # fun-asr 无免费额度 → 用 dashscope 走 paraformer-v1（有免费额度）
+      - key: ASR_MODEL
+        value: paraformer-v1    # v2 免费额度用尽，v1 仍有；同 API、保说话人分离
       - key: APP_SECRET_KEY        # Fernet 主密钥，Render 自动生成随机值
         generateValue: true
       - key: ACCESS_PASSCODE       # 访问口令（受控 Demo）；发给受邀用户
