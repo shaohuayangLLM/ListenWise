@@ -88,3 +88,54 @@ def identify_speakers(
         if k in speakers and isinstance(v, str) and v.strip():
             result[k] = v.strip()
     return result
+
+
+def identify_and_save(db, recording_id: int) -> dict:
+    """识别说话人姓名并写入 transcript.speaker_labels（不覆盖用户手动命名）。
+
+    供 API endpoint（手动触发）与转写任务（播客自动触发）复用。db 由调用方管理。
+    返回 {"ok": False, "error": str} 或 {"ok": True, "speaker_labels": {...}, "identified": int}。
+    """
+    from app.models.base import Capability
+    from app.models.podcast import PodcastEpisode
+    from app.models.recording import Recording
+    from app.models.transcript import Transcript
+    from app.services.provider_config import resolve_sync
+
+    transcript = (
+        db.query(Transcript).filter(Transcript.recording_id == recording_id).first()
+    )
+    if not transcript or not transcript.segments:
+        return {"ok": False, "error": "转写尚未完成，无法识别说话人"}
+
+    llm = resolve_sync(db, Capability.llm)
+    if not (llm and llm.api_key):
+        return {"ok": False, "error": "未配置大模型，请先在设置中配置"}
+
+    # 上下文：播客 shownotes（含主播名单）+ 上传备注，辅助 LLM 推断姓名
+    context_parts: list[str] = []
+    episode = (
+        db.query(PodcastEpisode)
+        .filter(PodcastEpisode.recording_id == recording_id)
+        .first()
+    )
+    if episode and episode.shownotes_text:
+        context_parts.append(episode.shownotes_text[:2000])
+    recording = db.query(Recording).filter(Recording.id == recording_id).first()
+    if recording and recording.note:
+        context_parts.append(recording.note[:1000])
+
+    labels = identify_speakers(transcript.segments, "\n".join(context_parts), llm)
+
+    # AI 识别的填入，但不覆盖用户已手动命名的（用户优先）
+    merged = dict(transcript.speaker_labels or {})
+    added = 0
+    for k, v in labels.items():
+        if k not in merged:
+            merged[k] = v
+            added += 1
+    if added:
+        transcript.speaker_labels = merged
+        transcript.is_edited = True
+        db.commit()
+    return {"ok": True, "speaker_labels": merged, "identified": added}

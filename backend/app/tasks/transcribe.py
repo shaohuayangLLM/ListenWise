@@ -68,6 +68,24 @@ def run_transcription(recording_id: int):
         db.commit()
         logger.info("Recording %d status -> done", recording_id)
 
+        # 5.5 播客来源转写完成后自动识别说话人姓名（shownotes 名单 + 自我介绍可推断真名）。
+        #     本地上传不自动（多无 shownotes、识别率低），由用户在详情页手动触发。
+        if recording.source == RecordingSource.podcast:
+            try:
+                from app.services.identify_speakers import identify_and_save
+
+                out = identify_and_save(db, recording_id)
+                if out.get("ok") and out.get("identified"):
+                    logger.info(
+                        "Recording %d auto-identified %d speaker name(s)",
+                        recording_id,
+                        out["identified"],
+                    )
+            except Exception as e:  # noqa: BLE001 - 识别失败不影响转写结果
+                logger.warning(
+                    "Auto speaker identify failed for %d: %s", recording_id, e
+                )
+
         # 6. 持久化音频到 Supabase Storage，释放 Render 临时盘（仅本地上传文件）
         file_url = recording.file_url or ""
         if file_url and not file_url.startswith(("http://", "https://")):
