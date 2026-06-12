@@ -4,8 +4,8 @@
 
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `main`（已推 GitHub）
-**最后更新：** 2026-06-11
-**最近：** M14 项目复盘修复（6 个 P0 主链路断点）+ 详情页体验（声纹动画/V4 底部播放条/顶部紧凑）+ AI 自动说话人命名 + PodNote/SpotScribe 竞品调研。已 push 上线（`7be2636`），Vercel + Render 部署中。
+**最后更新：** 2026-06-12
+**最近：** M15 ASR 切 paraformer-v1（免费续命，v2 额度用尽）+ 播客转写完**自动**说话人命名（参考 PodNote，从手动按钮升级为转写完自动出真名）。生产端到端验证通过（一凯/Lenny/Tony Fadell 全对，零手动点）。已 push 上线（`4182b9c`），Render 部署正常。
 
 ---
 
@@ -185,6 +185,16 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **详情页体验**：转写中**声纹跳动动画**（`lw-wave`）+ failed 态明确提示 + 重新上传入口；顶部紧凑化（播放器压扁、AI 摘要默认折叠整行可点）；**V4 底部固定播放条**（小宇宙式，避开 sidebar，音字联动/seek/倍速零损失，详情页留 `pb-14`）。形态稿 `docs/design/迷你播放器形态对比.html`（V1-V4）。
 - **AI 自动说话人命名（参考 PodNote）**：`services/identify_speakers.py` 用 LLM 根据对话自我介绍/互相称呼 + 播客 shownotes 主播名单，把 ASR 的 A/B/C 映射成真名，写入 `speaker_labels`（不覆盖用户手动命名）；详情页说话人区「AI 识别姓名」按钮，识别后 chip 显示真名、仍可手动微调。`POST /recordings/{id}/transcript/identify-speakers`。实测 #568 辩论 9 人识出 7 人真名。
 - **竞品调研**：`docs/research/2026-06-11-podnote竞品调研.md`（PodNote=Genvox/WhalesGrowth，扒接口得数据模型 meta/content/audio 三分 + 技术栈反推=阿里云 Fun-ASR/Paraformer+Qwen，与 ListenWise 几乎同栈；据用户截图修正"自动说话人命名"）+ SpotScribe（Whisper、无说话人、无批量）。结论：竞争在产品层不在技术层；真空机会=批量转整档播客。
+
+---
+
+### ✅ M15 — ASR 免费续命（paraformer-v1）+ 播客转写完自动说话人命名（2026-06-12）
+
+> 背景：百炼 paraformer-v2 免费额度用尽开始扣费 → 切回有免费额度的 v1；同时把 PodNote 式说话人命名从「详情页手动按钮」升级为「播客转写完自动出真名」。
+
+- **ASR 切 paraformer-v1（免费）**：`config.py` 新增 `asr_model`（默认 `paraformer-v1`）、`provider_config.py` 用 `settings.asr_model` 替死写的 v2、`render.yaml` 加 `ASR_MODEL=paraformer-v1`。同 API、保说话人分离/热词/语言提示，改动最小。**教训：`render.yaml` 文件值 ≠ Render 实际运行 env**（Dashboard 会覆盖）——切换前一度误判生产用 fun-asr，实为 v2（阿里云用量页铁证：v2 调用 9 次/40212 秒）。
+- **播客转写完自动说话人命名**：抽出 `identify_speakers.py:identify_and_save(db, recording_id)` 共享编排（识别 + 落库一处），API 手动按钮与转写任务复用；`run_transcription` 跑到 `done` 后**仅 `source=podcast` 自动调用**（本地上传仍手动——多无 shownotes、识别率低），识别失败包 `try/except` 不影响转写主流程，且不覆盖用户手动命名。`recordings.py` 净删 44 行重复。
+- **生产端到端验证**：导入《跨国串门计划》两期（AI 克隆 Lenny's Podcast / AI Eng Conf），paraformer-v1 转写 879 段 / 105 秒，**转写一完成 `speaker_labels` 自动出真名**（一凯=主播、Lenny=原主持、Tony Fadell=嘉宾，3 人全对，全程零手动点）；同时确认 Render 新版部署正常（M14 那次 build 失败悬案未复现）。
 
 ---
 
