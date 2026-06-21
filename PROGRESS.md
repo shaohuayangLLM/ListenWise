@@ -5,7 +5,7 @@
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
 **分支：** `feat/mobile-phase0`（移动端内测包，已推 origin）；主线 `main` 已上线
 **最后更新：** 2026-06-21
-**最近：** M16 移动端内测包 Phase 0（Expo/RN）——打通**播客阅读链路**，新增 `apps/mobile`，复用现有 FastAPI **零改**。自测 `tsc`/单测/`expo export` + mock 模拟测试全过。**真机/模拟器双端实测（连线上 Render 真后端，口令 listen2026）13 项功能全通过**：Android（小米 13U，adb 驱动，6-20）+ **iOS（iPhone 17 Pro 模拟器，idb 无头驱动，6-21）**，含音字联动真播·高亮·seek·倍速、AI解读章节seek、搜索、订阅。**测出并修复 2 个 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均已 iOS 端到端复测通过（订阅成功后 curl 删除清理）。转写流程按用户要求跳过（省 ASR 费）。详见 `docs/移动端开发/06-真机测试报告.md`。前序 M15（ASR paraformer-v1 + 转写完自动说话人命名）已上线。
+**最近：** M16 移动端内测包 Phase 0（Expo/RN）——打通**播客阅读链路**，新增 `apps/mobile`，复用现有 FastAPI **零改**。自测 `tsc`/单测/`expo export` + mock 模拟测试全过。**真机/模拟器双端实测（连线上 Render 真后端，口令 listen2026）13 项功能全通过**：Android（小米 13U，adb 驱动，6-20）+ **iOS（iPhone 17 Pro 模拟器，idb 无头驱动，6-21）**，含音字联动真播·高亮·seek·倍速、AI解读章节seek、搜索、订阅。**测出并修复 2 个 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均已 iOS 端到端复测通过（订阅成功后 curl 删除清理）。转写流程按用户要求跳过（省 ASR 费）。详见 `docs/移动端开发/06-真机测试报告.md`。本次修复已提交 `680bf80` 并推送 `origin/feat/mobile-phase0`（含前序 `100b794` 内测包）。前序 M15（ASR paraformer-v1 + 转写完自动说话人命名）已上线。
 
 ---
 
