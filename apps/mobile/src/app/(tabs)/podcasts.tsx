@@ -102,7 +102,7 @@ export default function PodcastsScreen() {
                     result={r}
                     subscribing={subM.isPending}
                     onSubscribe={() => {
-                      const url = r.source_url ?? r.feed_url;
+                      const url = r.feed_url ?? r.source_url;
                       if (url) subM.mutate(url);
                       else Alert.alert('无法订阅', '该结果缺少可订阅链接');
                     }}

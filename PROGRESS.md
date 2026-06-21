@@ -3,9 +3,9 @@
 ## 当前状态
 
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
-**分支：** `feat/mobile-phase0`（移动端内测包，未推）；主线 `main` 已上线
-**最后更新：** 2026-06-19
-**最近：** M16 移动端内测包 Phase 0（Expo/RN）——打通**播客阅读链路**（搜索/订阅/获取单集文字稿/阅读+音字联动），新增 `apps/mobile`，复用现有 FastAPI **零改**。自测 `tsc`/单测/`expo export` 全过,并用 Expo Web + 浏览器自动化 + mock 后端**模拟测试 13 项功能全通过**（含音字联动真实播放），抓修「根路由缺失」等。真机最终确认待用户。前序 M15（ASR 切 paraformer-v1 + 播客转写完自动说话人命名）已 push 上线。
+**分支：** `feat/mobile-phase0`（移动端内测包，已推 origin）；主线 `main` 已上线
+**最后更新：** 2026-06-21
+**最近：** M16 移动端内测包 Phase 0（Expo/RN）——打通**播客阅读链路**，新增 `apps/mobile`，复用现有 FastAPI **零改**。自测 `tsc`/单测/`expo export` + mock 模拟测试全过。**真机/模拟器双端实测（连线上 Render 真后端，口令 listen2026）13 项功能全通过**：Android（小米 13U，adb 驱动，6-20）+ **iOS（iPhone 17 Pro 模拟器，idb 无头驱动，6-21）**，含音字联动真播·高亮·seek·倍速、AI解读章节seek、搜索、订阅。**测出并修复 2 个 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均已 iOS 端到端复测通过（订阅成功后 curl 删除清理）。转写流程按用户要求跳过（省 ASR 费）。详见 `docs/移动端开发/06-真机测试报告.md`。前序 M15（ASR paraformer-v1 + 转写完自动说话人命名）已上线。
 
 ---
 
@@ -209,7 +209,7 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **转写状态**：`@tanstack/react-query` 轮询单集 `recording_status`，到终态停止；无推送。
 - **自测**：`tsc --noEmit` 0 错 + 纯函数单测 6/6（`node --test`）+ `expo export` 整包 bundle 成功（1243 模块）。
 - **模拟测试**（Expo Web + 浏览器自动化 + 本地 mock 后端，iPhone 视口）：13 项功能全通过——口令门/搜索订阅/节目单集/**转写轮询自动出稿**/**音字联动真实播放·高亮·点句 seek·倍速**/AI 解读/我的记录/设置。**抓修真机必现的根路由 `/` 缺失（Unmatched Route）** + secure-store web 兜底等。报告 `docs/移动端开发/05-模拟测试报告.md`。
-- **真机最终确认**（Expo Go 扫码手感）待用户，见 `docs/移动端开发/02-真机验收教程.md`。
+- **真机/模拟器双端实测**（连**线上 Render 真后端**，口令 `listen2026`）：Android（2026-06-20，小米 13U，adb 驱动）+ iOS（2026-06-21，iPhone 17 Pro 模拟器，idb 无头驱动）各 13 项功能全通过（含音字联动真播/高亮/seek/倍速、AI解读章节seek、搜索、订阅）。**测出并修复 2 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均 iOS 端到端复测通过。`tsc` 0 错 + 单测 6/6。转写流程跳过（省 ASR 费）。环境坑（小米禁 adb 装/模拟点击、USB 闪断走 WiFi；iOS 锁屏走 idb 无头）+ 完整结果见 `docs/移动端开发/06-真机测试报告.md`。
 - **Phase 0 不做**：录音、上传本地文件、正式账号/多租户、推送、离线、导出分享到 Obsidian。
 
 ---
