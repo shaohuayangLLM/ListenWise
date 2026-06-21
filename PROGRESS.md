@@ -3,9 +3,9 @@
 ## 当前状态
 
 **阶段：** 已公网上线（受控 Demo）— 前端 https://listen-wise.vercel.app，后端 Render，库 Supabase
-**分支：** `main`（已推 GitHub）
-**最后更新：** 2026-06-12
-**最近：** M15 ASR 切 paraformer-v1（免费续命，v2 额度用尽）+ 播客转写完**自动**说话人命名（参考 PodNote，从手动按钮升级为转写完自动出真名）。生产端到端验证通过（一凯/Lenny/Tony Fadell 全对，零手动点）。已 push 上线（`4182b9c`），Render 部署正常。
+**分支：** `feat/mobile-phase0`（移动端内测包，已推 origin）；主线 `main` 已上线
+**最后更新：** 2026-06-21
+**最近：** M16 移动端内测包 Phase 0（Expo/RN）——打通**播客阅读链路**，新增 `apps/mobile`，复用现有 FastAPI **零改**。自测 `tsc`/单测/`expo export` + mock 模拟测试全过。**真机/模拟器双端实测（连线上 Render 真后端，口令 listen2026）13 项功能全通过**：Android（小米 13U，adb 驱动，6-20）+ **iOS（iPhone 17 Pro 模拟器，idb 无头驱动，6-21）**，含音字联动真播·高亮·seek·倍速、AI解读章节seek、搜索、订阅。**测出并修复 2 个 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均已 iOS 端到端复测通过（订阅成功后 curl 删除清理）。转写流程按用户要求跳过（省 ASR 费）。详见 `docs/移动端开发/06-真机测试报告.md`。本次修复已提交 `680bf80` 并推送 `origin/feat/mobile-phase0`（含前序 `100b794` 内测包）。前序 M15（ASR paraformer-v1 + 转写完自动说话人命名）已上线。
 
 ---
 
@@ -195,6 +195,22 @@ ListenWise 从「纯音频转写工具」重定向为 **云 API 聚合的转写 
 - **ASR 切 paraformer-v1（免费）**：`config.py` 新增 `asr_model`（默认 `paraformer-v1`）、`provider_config.py` 用 `settings.asr_model` 替死写的 v2、`render.yaml` 加 `ASR_MODEL=paraformer-v1`。同 API、保说话人分离/热词/语言提示，改动最小。**教训：`render.yaml` 文件值 ≠ Render 实际运行 env**（Dashboard 会覆盖）——切换前一度误判生产用 fun-asr，实为 v2（阿里云用量页铁证：v2 调用 9 次/40212 秒）。
 - **播客转写完自动说话人命名**：抽出 `identify_speakers.py:identify_and_save(db, recording_id)` 共享编排（识别 + 落库一处），API 手动按钮与转写任务复用；`run_transcription` 跑到 `done` 后**仅 `source=podcast` 自动调用**（本地上传仍手动——多无 shownotes、识别率低），识别失败包 `try/except` 不影响转写主流程，且不覆盖用户手动命名。`recordings.py` 净删 44 行重复。
 - **生产端到端验证**：导入《跨国串门计划》两期（AI 克隆 Lenny's Podcast / AI Eng Conf），paraformer-v1 转写 879 段 / 105 秒，**转写一完成 `speaker_labels` 自动出真名**（一凯=主播、Lenny=原主持、Tony Fadell=嘉宾，3 人全对，全程零手动点）；同时确认 Render 新版部署正常（M14 那次 build 失败悬案未复现）。
+
+---
+
+### ✅ M16 — 移动端内测包 Phase 0（Expo/RN，2026-06-19）
+
+> 目标：做能装真机的内测包验证移动端手感，以后再决定是否上架。路线选 Expo/RN（代码可延续上架），首版只打通**播客阅读链路**一条。文档集中在 `docs/移动端开发/`,设计 spec 见 `docs/superpowers/specs/2026-06-19-移动端内测包Phase0-design.md`。
+
+- **新增 `apps/mobile`**（Expo SDK 56 + expo-router + RN 0.85 + React 19 + TS）：单目录、**不抽共享包**（YAGNI）、不引 monorepo 工具链；Web/后端不动。复用现有 FastAPI **零改**，默认连线上 Render（`/api`），设置页可切本地。
+- **3 tab + 详情屏**：播客（搜索/订阅/已订阅）、我的记录、设置；节目详情、单集详情（shownotes + 获取文字稿 + 状态轮询）、阅读页。
+- **阅读页音字联动**：`expo-audio` 底部播放条（播放/暂停/倍速/进度）+ 文字稿 FlatList 虚拟列表（高亮当前句 + 点句 seek + 自动滚动）+ AI 解读（摘要 + 章节时间戳点击 seek）。
+- **鉴权**：临时复用 `X-Access-Passcode`，口令存 `expo-secure-store`（web 兜底 localStorage），401 回口令门；不做正式账号（Phase 1）。
+- **转写状态**：`@tanstack/react-query` 轮询单集 `recording_status`，到终态停止；无推送。
+- **自测**：`tsc --noEmit` 0 错 + 纯函数单测 6/6（`node --test`）+ `expo export` 整包 bundle 成功（1243 模块）。
+- **模拟测试**（Expo Web + 浏览器自动化 + 本地 mock 后端，iPhone 视口）：13 项功能全通过——口令门/搜索订阅/节目单集/**转写轮询自动出稿**/**音字联动真实播放·高亮·点句 seek·倍速**/AI 解读/我的记录/设置。**抓修真机必现的根路由 `/` 缺失（Unmatched Route）** + secure-store web 兜底等。报告 `docs/移动端开发/05-模拟测试报告.md`。
+- **真机/模拟器双端实测**（连**线上 Render 真后端**，口令 `listen2026`）：Android（2026-06-20，小米 13U，adb 驱动）+ iOS（2026-06-21，iPhone 17 Pro 模拟器，idb 无头驱动）各 13 项功能全通过（含音字联动真播/高亮/seek/倍速、AI解读章节seek、搜索、订阅）。**测出并修复 2 bug**：①搜索 Apple 结果订阅失败「无法识别该 RSS 节目」→ `podcasts.tsx:105` 改 `feed_url ?? source_url`；②iOS 返回按钮露出「(tabs)」→ `_layout.tsx` 加 `headerBackButtonDisplayMode:'minimal'`。均 iOS 端到端复测通过。`tsc` 0 错 + 单测 6/6。转写流程跳过（省 ASR 费）。环境坑（小米禁 adb 装/模拟点击、USB 闪断走 WiFi；iOS 锁屏走 idb 无头）+ 完整结果见 `docs/移动端开发/06-真机测试报告.md`。
+- **Phase 0 不做**：录音、上传本地文件、正式账号/多租户、推送、离线、导出分享到 Obsidian。
 
 ---
 
